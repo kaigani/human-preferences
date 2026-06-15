@@ -1,0 +1,42 @@
+# ─────────────────────────────────────────────────────────────
+# PERSONAL DATA — never commit. The code is open-source; your
+# preferences, judgments, and keys are private.
+# ─────────────────────────────────────────────────────────────
+data/                 # SQLite DB: seeds, generated pairs, judgments, notes
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Exports — your DPO dataset + synthesized taste profile / rubric
+exports/
+*.jsonl
+rubric*.txt
+rubric*.md
+
+# Current-events scratch inputs you feed to the worker
+events*.json
+
+# Secrets / config
+.env
+.env.local
+.env.*.local
+
+# ─────────────────────────────────────────────────────────────
+# Build / tooling
+# ─────────────────────────────────────────────────────────────
+node_modules/
+.npm-cache/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+coverage/
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json

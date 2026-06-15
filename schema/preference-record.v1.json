@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kaigani/human-preferences/schema/preference-record.v1.json",
+  "title": "Preference Record (v1)",
+  "description": "A single judged A/B preference pair. Self-contained and portable: an adopter can ingest exported records without the source database. Mirrors the SHP/DPO shape (context + option A + option B + which was preferred).",
+  "type": "object",
+  "required": ["id", "schema_version", "context", "content_type", "options", "provenance", "judgment"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "description": "Stable pair id (uuid)." },
+    "schema_version": { "type": "integer", "const": 1 },
+    "context": {
+      "type": "string",
+      "description": "The prompt/question the A/B pair sits under. Maps to DPO `prompt`."
+    },
+    "content_type": {
+      "type": "string",
+      "enum": ["text", "markdown", "image_ref", "artifact_excerpt"],
+      "description": "How option content should be interpreted/rendered."
+    },
+    "axis": {
+      "type": ["string", "null"],
+      "description": "The contrast dimension being judged, e.g. 'minimal vs ornate'."
+    },
+    "options": {
+      "type": "object",
+      "required": ["a", "b"],
+      "additionalProperties": false,
+      "properties": {
+        "a": { "$ref": "#/$defs/option" },
+        "b": { "$ref": "#/$defs/option" }
+      }
+    },
+    "theme": {
+      "type": ["object", "null"],
+      "required": ["id", "label", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "kind": { "type": "string", "enum": ["abstract", "shp_domain", "current_events", "custom"] }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_type"],
+      "additionalProperties": false,
+      "properties": {
+        "source_type": { "type": "string", "enum": ["shp", "theme", "current_event", "manual"] },
+        "source_ref": { "type": ["string", "null"], "description": "SHP post_id, current-event id, etc." },
+        "generator": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "provider": { "type": "string", "enum": ["anthropic", "ollama", "claude_code", "manual"] },
+            "model": { "type": ["string", "null"] },
+            "prompt_id": { "type": ["string", "null"] }
+          }
+        },
+        "generation_strength": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    },
+    "judgment": {
+      "type": "object",
+      "required": ["choice", "created_at"],
+      "additionalProperties": false,
+      "properties": {
+        "choice": { "type": "string", "enum": ["a", "b", "skip", "no_preference"] },
+        "note": { "type": ["string", "null"] },
+        "latency_ms": { "type": ["integer", "null"] },
+        "session_id": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "option": {
+      "type": "object",
+      "required": ["content"],
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The statement/stance text, an image URI (content_type=image_ref), or an excerpt (artifact_excerpt)."
+        },
+        "meta": {
+          "type": "object",
+          "description": "Free-form per-option metadata: image {width,height,alt}, excerpt {source_id,span:[start,end]}, etc.",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

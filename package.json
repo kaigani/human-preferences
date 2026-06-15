@@ -1,0 +1,40 @@
+{
+  "name": "human-preferences",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local-first tool to capture personal A/B preferences and export them for LLM-judging and fine-tuning.",
+  "license": "MIT",
+  "workspaces": [
+    "app"
+  ],
+  "scripts": {
+    "db:migrate": "tsx server/migrate.ts",
+    "server": "tsx watch server/index.ts",
+    "worker": "tsx worker/runner.ts",
+    "app": "npm run dev --workspace app",
+    "dev": "concurrently -n server,app -c blue,magenta \"npm run server\" \"npm run app\"",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "import:shp": "tsx worker/seeds/import-shp.ts",
+    "cli": "tsx worker/cli.ts",
+    "export:dpo": "tsx export/dpo.ts",
+    "export:rubric": "tsx export/rubric.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "better-sqlite3": "^11.5.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.1.0",
+    "@fastify/static": "^8.0.3",
+    "nanoid": "^5.0.9",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.9.0",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
