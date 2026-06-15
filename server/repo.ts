@@ -127,7 +127,7 @@ const countJudged = db.prepare(
 const countPairs = db.prepare(`SELECT COUNT(*) AS n FROM pairs`);
 const countQueued = db.prepare(`SELECT COUNT(*) AS n FROM pairs WHERE status = 'queued'`);
 const statsByTheme = db.prepare(`
-  SELECT t.id AS theme_id, t.label AS label,
+  SELECT t.id AS theme_id, t.label AS label, t.kind AS kind,
          SUM(CASE WHEN p.status = 'judged'  THEN 1 ELSE 0 END) AS judged,
          SUM(CASE WHEN p.status = 'queued'  THEN 1 ELSE 0 END) AS queued
   FROM themes t
@@ -135,6 +135,39 @@ const statsByTheme = db.prepare(`
   GROUP BY t.id
   ORDER BY t.sort_order, t.label
 `);
+
+// ── current-events feed ─────────────────────────────────────────────
+const selectFeed = db.prepare(`
+  SELECT s.id, s.source_ref, s.context, s.created_at,
+         COUNT(p.id) AS pair_count,
+         SUM(CASE WHEN p.status = 'queued' THEN 1 ELSE 0 END) AS queued
+  FROM seeds s
+  LEFT JOIN pairs p ON p.seed_id = s.id
+  WHERE s.source_type = 'current_event'
+  GROUP BY s.id
+  ORDER BY s.created_at DESC
+  LIMIT ?
+`);
+
+export interface FeedItem {
+  id: string;
+  title: string;
+  source: string;
+  when: string;
+  pair_count: number;
+  queued: number;
+}
+
+export function getFeed(limit = 8): FeedItem[] {
+  return (selectFeed.all(limit) as any[]).map((r) => ({
+    id: r.id,
+    title: r.context,
+    source: 'Current events',
+    when: r.created_at,
+    pair_count: r.pair_count ?? 0,
+    queued: r.queued ?? 0,
+  }));
+}
 
 const DEFAULT_GOAL = 100_000;
 
@@ -145,6 +178,7 @@ export function getStats(goal = DEFAULT_GOAL): StatsSummary {
   const by_theme = (statsByTheme.all() as any[]).map((r) => ({
     theme_id: r.theme_id,
     label: r.label,
+    kind: r.kind,
     judged: r.judged ?? 0,
     queued: r.queued ?? 0,
   }));

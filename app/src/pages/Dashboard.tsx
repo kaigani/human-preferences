@@ -76,7 +76,10 @@ export function Dashboard({ name }: { name: string }) {
         </span>
       </div>
       <div className="tiles">
-        {(stats?.by_theme ?? []).map((t) => (
+        {(stats?.by_theme ?? [])
+          .filter((t) => t.kind === 'abstract' || t.kind === 'current_events')
+          .slice(0, 5)
+          .map((t) => (
           <div className="tile" key={t.theme_id} onClick={() => navigate(`/judge?theme=${t.theme_id}`)} style={{ cursor: 'pointer' }}>
             <div className="swatch" style={{ background: artFor(t.theme_id) }} />
             <div>

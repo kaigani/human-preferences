@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getDb, migrate } from '../server/db.js';
 import { themeSeeds } from './seeds/themes.js';
+import { selectShpSeeds } from './seeds/select-shp.js';
 import {
   SHARED_DIR,
   ingestPairs,
@@ -46,24 +47,34 @@ function ingestFromFile(path: string, jobId: string) {
 
 switch (cmd) {
   case 'export-job': {
-    const source = f.source ?? 'theme';
-    if (source !== 'theme') throw new Error(`only --source theme is supported here (SHP arrives in Phase 3)`);
-    const theme = f.theme;
-    if (!theme) throw new Error('export-job --source theme requires --theme <id>');
+    const source = (f.source ?? 'theme') as 'theme' | 'shp';
+    const pairsPerSeed = Number(f['pairs-per-seed'] ?? (source === 'shp' ? 2 : 5));
     const seedCount = Number(f.seeds ?? 20);
-    const pairsPerSeed = Number(f['pairs-per-seed'] ?? 5);
-    const seeds: SeedLine[] = themeSeeds(theme, seedCount, pairsPerSeed);
 
-    const job_id = newJobId(`theme-${theme}`);
+    let seeds: SeedLine[];
+    let jobLabel: string;
+    if (source === 'theme') {
+      if (!f.theme) throw new Error('export-job --source theme requires --theme <id>');
+      seeds = themeSeeds(f.theme, seedCount, pairsPerSeed);
+      jobLabel = `theme-${f.theme}`;
+    } else if (source === 'shp') {
+      seeds = selectShpSeeds(seedCount, pairsPerSeed, f.theme);
+      if (!seeds.length) throw new Error('no unused SHP seeds — run `npm run import:shp -- --spread --limit 2000` first');
+      jobLabel = f.theme ? `shp-${f.theme.replace('shp:', '')}` : 'shp';
+    } else {
+      throw new Error(`unknown --source ${source} (use theme | shp)`);
+    }
+
+    const job_id = newJobId(jobLabel);
     const spec: JobSpec = {
       job_id,
       created_at: new Date().toISOString(),
-      source_type: 'theme',
+      source_type: source,
       provider: (f.provider as JobSpec['provider']) ?? 'ollama',
       model: f.model ?? 'gemma2',
-      prompt_id: f['prompt-id'] ?? 'stance_contrast_v1',
+      prompt_id: f['prompt-id'] ?? (source === 'shp' ? 'opinion_stance_v1' : 'stance_contrast_v1'),
       pairs_per_seed: pairsPerSeed,
-      requested_count: seedCount * pairsPerSeed,
+      requested_count: seeds.length * pairsPerSeed,
       notes: f.notes,
     };
     const dir = writeJob(spec, seeds);

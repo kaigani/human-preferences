@@ -4,6 +4,7 @@ import { getDb, migrate } from './db.js';
 import {
   createSession,
   endSession,
+  getFeed,
   getNextPairs,
   getStats,
   listThemes,
@@ -67,6 +68,9 @@ app.post('/api/judgments', async (req, reply) => {
 
 // ── themes ──
 app.get('/api/themes', async () => ({ themes: listThemes() }));
+
+// ── current-events feed ──
+app.get('/api/events/feed', async () => ({ items: getFeed() }));
 
 // ── stats ──
 app.get('/api/stats', async () => getStats());

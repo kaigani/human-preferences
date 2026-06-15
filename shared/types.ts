@@ -177,6 +177,9 @@ export interface GeneratedPairLine {
   source_ref: string | null;
   theme_id: string | null;
   context: string;
+  /** Optional distinct context for the SEED (e.g. a news headline) when it
+   *  differs from the pair's own context. Used by the current-events feed. */
+  seed_context?: string | null;
   content_type: ContentType;
   option_a: string;
   option_b: string;
@@ -207,7 +210,7 @@ export interface StatsSummary {
   queued: number;
   goal: number;
   percent: number;
-  by_theme: Array<{ theme_id: string; label: string; judged: number; queued: number }>;
+  by_theme: Array<{ theme_id: string; label: string; kind: ThemeKind; judged: number; queued: number }>;
 }
 
 /** The portable export record (matches schema/preference-record.v1.json). */

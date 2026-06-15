@@ -116,7 +116,7 @@ export const ingestPairs = db.transaction(
         source_type: line.source_type,
         source_ref: line.source_ref,
         theme_id: line.theme_id,
-        context: line.context,
+        context: line.seed_context ?? line.context,
       });
       const content_hash = pairContentHash(line.context, line.option_a, line.option_b);
       const info = insertPair.run({

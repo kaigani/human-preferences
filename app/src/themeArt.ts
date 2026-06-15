@@ -5,6 +5,7 @@ export const THEME_ART: Record<string, string> = {
   living: 'linear-gradient(135deg, #cdd7c5, #8a9b86)',
   power: 'linear-gradient(135deg, #2c2a22, #6b6150)',
   culture: 'linear-gradient(135deg, #d9b8a0, #a9778f)',
+  'current-events': 'linear-gradient(135deg, #b0431f, #d98a3a)',
 };
 
 export function artFor(id: string): string {
