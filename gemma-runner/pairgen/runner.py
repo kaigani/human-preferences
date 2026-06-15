@@ -33,7 +33,7 @@ def _mock_pairs(seed: dict, n: int) -> list[dict]:
     return out
 
 
-def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, show_traces: bool = True) -> list[dict]:
+def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, show_traces: bool = True, think: bool = False) -> list[dict]:
     n = int(seed.get("pairs_per_seed") or job.get("pairs_per_seed") or 3)
     prompt_id = job.get("prompt_id", "stance_contrast_v1")
     label = f"{job['job_id']}:{seed['seed_id']}"
@@ -56,7 +56,7 @@ def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, sho
                 writer_out = llm.chat(
                     cfg, cfg.provider.writer_model, wprompt,
                     as_json=False, label=label + ":write",
-                    think=cfg.provider.think, show_traces=show_traces,
+                    think=think, show_traces=show_traces,
                 )
                 fmt = prompts.formatter_prompt(writer_out)
                 raw = llm.chat(
@@ -68,7 +68,7 @@ def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, sho
                 raw = llm.chat(
                     cfg, cfg.provider.writer_model, wprompt,
                     as_json=True, label=label,
-                    think=cfg.provider.think, show_traces=show_traces,
+                    think=think, show_traces=show_traces,
                 )
             parsed = llm.extract_json(raw)
             raw_pairs = parsed.get("pairs", [])
@@ -99,7 +99,8 @@ def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, sho
     return lines
 
 
-def process_job(cfg: AppConfig, job_dir: Path, *, mock: bool = False, force: bool = False, show_traces: bool = True) -> dict:
+def process_job(cfg: AppConfig, job_dir: Path, *, mock: bool = False, force: bool = False, show_traces: bool = True, think: bool | None = None) -> dict:
+    eff_think = cfg.provider.think if think is None else think
     job = json.loads((job_dir / "job.json").read_text(encoding="utf-8"))
     complete_path = job_dir / "COMPLETE.json"
     if complete_path.exists() and not force:
@@ -112,7 +113,7 @@ def process_job(cfg: AppConfig, job_dir: Path, *, mock: bool = False, force: boo
     all_lines: list[dict] = []
     failures = 0
     for i, seed in enumerate(seeds, 1):
-        lines = _generate_for_seed(cfg, job, seed, mock=mock, show_traces=show_traces)
+        lines = _generate_for_seed(cfg, job, seed, mock=mock, show_traces=show_traces, think=eff_think)
         if not lines:
             failures += 1
         all_lines.extend(lines)

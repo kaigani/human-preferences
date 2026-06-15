@@ -26,6 +26,9 @@ def main() -> None:
     ap.add_argument("--mock", action="store_true", help="generate placeholder pairs without calling a model")
     ap.add_argument("--force", action="store_true", help="reprocess even if COMPLETE.json exists")
     ap.add_argument("--quiet", action="store_true", help="hide the live thinking/content traces")
+    think_grp = ap.add_mutually_exclusive_group()
+    think_grp.add_argument("--think", dest="think", action="store_true", default=None, help="force thinking on (overrides config)")
+    think_grp.add_argument("--no-think", dest="think", action="store_false", help="force thinking off (overrides config)")
     ap.add_argument("--config", default=str(DEFAULT_CONFIG))
     args = ap.parse_args()
 
@@ -57,7 +60,7 @@ def main() -> None:
         if not (job_dir / "job.json").exists():
             print(f"  [warn] {job_dir.name}: no job.json, skipping")
             continue
-        runner.process_job(cfg, job_dir, mock=args.mock, force=args.force, show_traces=not args.quiet)
+        runner.process_job(cfg, job_dir, mock=args.mock, force=args.force, show_traces=not args.quiet, think=args.think)
     print("All done. Now ingest on the app machine:  npm run cli -- ingest-batch --job <job_id>")
 
 

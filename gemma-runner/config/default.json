@@ -10,7 +10,7 @@
     "temperature": 0.9,
     "num_ctx": 16384,
     "num_predict": 4096,
-    "think": true
+    "think": false
   },
   "run": {
     "jobs_dir": "jobs",
