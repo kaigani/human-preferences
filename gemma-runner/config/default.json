@@ -1,0 +1,20 @@
+{
+  "project_name": "human-preferences-pairgen",
+  "provider": {
+    "mode": "ollama",
+    "base_url": "http://localhost:11434",
+    "writer_model": "huihui_ai/gemma-4-abliterated:31b",
+    "formatter_model": "qwen2.5-coder:32b",
+    "use_formatter": true,
+    "timeout_seconds": 300,
+    "temperature": 0.9,
+    "num_ctx": 16384,
+    "num_predict": 4096
+  },
+  "run": {
+    "jobs_dir": "jobs",
+    "failures_dir": "llm_failures",
+    "max_retries": 2,
+    "retry_backoff_seconds": 8
+  }
+}

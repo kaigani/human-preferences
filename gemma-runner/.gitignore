@@ -1,0 +1,5 @@
+# Runner artifacts — never commit generated data or job exchange
+jobs/
+llm_failures/
+__pycache__/
+*.pyc
