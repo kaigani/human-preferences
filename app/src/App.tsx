@@ -16,21 +16,23 @@ export function App() {
   }, []);
 
   return (
-    <div className="shell">
-      <Sidebar name={name} />
-      <main className="main">
-        <Routes>
-          <Route path="/" element={<Dashboard name={name} />} />
-          <Route path="/judge" element={<Judge />} />
-          <Route path="/themes" element={<Themes />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </main>
-      <Rail />
+    <>
+      <div className="shell">
+        <Sidebar name={name} />
+        <main className="main">
+          <Routes>
+            <Route path="/" element={<Dashboard name={name} />} />
+            <Route path="/judge" element={<Judge />} />
+            <Route path="/themes" element={<Themes />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </main>
+        <Rail />
+      </div>
       <footer className="footer-band">
         <span className="fb-main">Your voice. Your preferences. Your world.</span>
         <span className="fb-sub">Built on the shape of Stanford Human Preferences</span>
       </footer>
-    </div>
+    </>
   );
 }

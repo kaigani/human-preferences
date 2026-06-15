@@ -312,7 +312,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* ════════════════ System bar / footer ════════════════ */
 .footer-band {
-  grid-column: 1 / -1; margin-top: 56px;
+  max-width: var(--maxw); margin: 0 auto;
   background: linear-gradient(100deg, var(--color-systembar-bg), var(--color-systembar-bg-deep));
   color: var(--color-systembar-text);
   padding: 18px 44px;
