@@ -134,6 +134,72 @@ export interface PairGenerator {
   generate(input: GenerateInput): Promise<GeneratedPair[]>;
 }
 
+// ── Batch exchange protocol (gemma-runner / Claude-Code injection) ──
+// The shared folder is a passive artifact store. This app writes a job
+// (job.json + seeds.jsonl); the remote runner produces pairs.jsonl +
+// COMPLETE.json; this app ingests pairs.jsonl back into SQLite.
+// Mirrored on the Python side — keep formats in lockstep.
+
+export interface JobSpec {
+  job_id: string;
+  created_at: string;
+  source_type: Exclude<SourceType, 'manual'>;
+  provider: 'ollama' | 'claude_code';
+  /** Suggested model; the runner may override from its own config. */
+  model: string;
+  /** Generation template id the runner should use. */
+  prompt_id: string;
+  /** Target pairs to produce per seed. */
+  pairs_per_seed: number;
+  /** Total pairs requested across the job (for progress display). */
+  requested_count: number;
+  notes?: string;
+}
+
+/** One line of seeds.jsonl — a context the runner expands into pairs. */
+export interface SeedLine {
+  seed_id: string;
+  source_type: Exclude<SourceType, 'manual'>;
+  source_ref: string | null;
+  theme_id: string | null;
+  theme_label: string | null;
+  /** The context/prompt the A/B pair sits under (SHP history, theme prompt, news item). */
+  context: string;
+  /** Optional hint at the contrast dimension to explore. */
+  axis_hint?: string;
+  pairs_per_seed: number;
+}
+
+/** One line of pairs.jsonl — a generated A/B pair ready to ingest. */
+export interface GeneratedPairLine {
+  seed_id: string;
+  source_type: SourceType;
+  source_ref: string | null;
+  theme_id: string | null;
+  context: string;
+  content_type: ContentType;
+  option_a: string;
+  option_b: string;
+  axis: string | null;
+  /** 0..1 model confidence this is a clean, meaningful contrast. */
+  strength?: number | null;
+  provider: GeneratorProvider;
+  model: string | null;
+  prompt_id: string | null;
+}
+
+/** COMPLETE.json — written by the runner when a job finishes. */
+export interface BatchManifest {
+  job_id: string;
+  status: 'complete' | 'partial' | 'error';
+  produced_count: number;
+  seed_count: number;
+  failures: number;
+  completed_at: string;
+  model: string | null;
+  error?: string;
+}
+
 // ── API response shapes ────────────────────────────────────────────
 export interface StatsSummary {
   total_judged: number;
