@@ -10,6 +10,7 @@ import {
   listThemes,
   recordJudgment,
 } from './repo.js';
+import { buildDpoJsonl, buildRecords, buildRubric } from '../export/build.js';
 import type { Choice, JudgmentInput } from '@shared/types.js';
 
 // Migrate-on-boot so the DB is always current.
@@ -71,6 +72,31 @@ app.get('/api/themes', async () => ({ themes: listThemes() }));
 
 // ── current-events feed ──
 app.get('/api/events/feed', async () => ({ items: getFeed() }));
+
+// ── exports (download) ──
+app.get('/api/export/dpo', async (_req, reply) => {
+  const { jsonl } = buildDpoJsonl();
+  return reply
+    .header('content-type', 'application/x-ndjson')
+    .header('content-disposition', 'attachment; filename="dpo.jsonl"')
+    .send(jsonl);
+});
+
+app.get('/api/export/records', async (_req, reply) => {
+  const records = buildRecords();
+  return reply
+    .header('content-type', 'application/json')
+    .header('content-disposition', 'attachment; filename="preference-records.json"')
+    .send(JSON.stringify({ schema_version: 1, records }, null, 2));
+});
+
+app.get('/api/export/rubric', async (_req, reply) => {
+  const { markdown } = buildRubric(USER_DISPLAY_NAME);
+  return reply
+    .header('content-type', 'text/markdown')
+    .header('content-disposition', 'attachment; filename="taste-rubric.md"')
+    .send(markdown);
+});
 
 // ── stats ──
 app.get('/api/stats', async () => getStats());

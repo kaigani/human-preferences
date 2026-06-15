@@ -10,7 +10,8 @@ export function Profile() {
     api.stats().then(setStats).catch(() => {});
   }, []);
 
-  const maxJudged = Math.max(1, ...(stats?.by_theme.map((t) => t.judged) ?? [1]));
+  const themesWithPairs = (stats?.by_theme ?? []).filter((t) => t.judged + t.queued > 0);
+  const maxJudged = Math.max(1, ...themesWithPairs.map((t) => t.judged), 1);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -42,7 +43,7 @@ export function Profile() {
         <span className="eyebrow">By theme</span>
       </div>
       <div>
-        {(stats?.by_theme ?? []).map((t) => (
+        {themesWithPairs.map((t) => (
           <div className="bar-row" key={t.theme_id}>
             <span className="serif" style={{ fontSize: 16 }}>{t.label}</span>
             <span className="bar-track">
@@ -53,8 +54,20 @@ export function Profile() {
         ))}
       </div>
 
-      <p style={{ marginTop: 40, color: 'var(--ink-3)', fontSize: 13, fontStyle: 'italic', fontFamily: 'var(--serif)' }}>
-        Export your taste profile (DPO dataset & LLM-judge rubric) arrives in the next build.
+      <div className="section-head" style={{ marginTop: 44 }}>
+        <span className="eyebrow">Export your taste</span>
+      </div>
+      <p style={{ color: 'var(--ink-2)', fontSize: 14, maxWidth: '40em', lineHeight: 1.6 }}>
+        Your judgments, ready to use elsewhere. The DPO set fine-tunes a proxy; the
+        rubric drops into any model as a system prompt so it judges the way you would.
+      </p>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 20 }}>
+        <a className="btn-gold" href="/api/export/rubric" download>Taste rubric (.md) ↓</a>
+        <a className="btn-gold" href="/api/export/dpo" download style={{ background: 'var(--ink)', color: 'var(--paper)', boxShadow: 'none' }}>DPO dataset (.jsonl) ↓</a>
+        <a className="text-link" href="/api/export/records" download style={{ alignSelf: 'center' }}>Portable records (.json) ↓</a>
+      </div>
+      <p style={{ marginTop: 16, color: 'var(--ink-3)', fontSize: 12 }}>
+        Skip / no-preference judgments are kept in the portable records but excluded from the DPO set.
       </p>
     </motion.div>
   );
