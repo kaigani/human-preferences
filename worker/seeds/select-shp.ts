@@ -3,17 +3,25 @@ import type { SeedLine } from '../../shared/types.js';
 
 const db = getDb();
 
-/** Pick SHP seeds not yet turned into pairs, optionally limited to one domain. */
+/**
+ * Pick SHP seeds not yet turned into pairs, optionally limited to one domain.
+ * Round-robins across domains (one per domain, then the next per domain, …) so
+ * a plain `--source shp` selection spans domains broadly instead of draining
+ * them in import order.
+ */
 export function selectShpSeeds(limit: number, pairsPerSeed: number, themeId?: string): SeedLine[] {
   const rows = db
     .prepare(
-      `SELECT s.id, s.source_ref, s.theme_id, t.label AS theme_label, s.context
-       FROM seeds s
-       JOIN themes t ON t.id = s.theme_id
-       WHERE s.source_type = 'shp'
-         AND (@theme IS NULL OR s.theme_id = @theme)
-         AND NOT EXISTS (SELECT 1 FROM pairs p WHERE p.seed_id = s.id)
-       ORDER BY s.created_at
+      `SELECT id, source_ref, theme_id, theme_label, context FROM (
+         SELECT s.id, s.source_ref, s.theme_id, t.label AS theme_label, s.context,
+                ROW_NUMBER() OVER (PARTITION BY s.theme_id ORDER BY s.id) AS rn
+         FROM seeds s
+         JOIN themes t ON t.id = s.theme_id
+         WHERE s.source_type = 'shp'
+           AND (@theme IS NULL OR s.theme_id = @theme)
+           AND NOT EXISTS (SELECT 1 FROM pairs p WHERE p.seed_id = s.id)
+       )
+       ORDER BY rn, theme_id
        LIMIT @limit`,
     )
     .all({ theme: themeId ?? null, limit }) as any[];
