@@ -35,10 +35,10 @@ export function Themes() {
             <div
               key={t.id}
               className="tile"
-              style={{ cursor: 'pointer', minHeight: 200 }}
+              style={{ cursor: 'pointer', minHeight: '200px', '--tile-dot': artFor(t.id) } as Record<string, string>}
               onClick={() => navigate(`/judge?theme=${t.id}`)}
             >
-              <div className="swatch" style={{ background: artFor(t.id), height: 96 }} />
+              <div className="swatch" style={{ background: artFor(t.id) }} />
               <div>
                 <div className="t-name">{t.label}</div>
                 {t.description && (

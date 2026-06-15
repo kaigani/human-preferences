@@ -63,7 +63,7 @@ export function Profile() {
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 20 }}>
         <a className="btn-gold" href="/api/export/rubric" download>Taste rubric (.md) ↓</a>
-        <a className="btn-gold" href="/api/export/dpo" download style={{ background: 'var(--ink)', color: 'var(--paper)', boxShadow: 'none' }}>DPO dataset (.jsonl) ↓</a>
+        <a className="btn-gold" href="/api/export/dpo" download style={{ background: 'var(--color-action)', color: 'var(--color-text-inverse)', border: '1px solid var(--color-action)', boxShadow: 'none' }}>DPO dataset (.jsonl) ↓</a>
         <a className="text-link" href="/api/export/records" download style={{ alignSelf: 'center' }}>Portable records (.json) ↓</a>
       </div>
       <p style={{ marginTop: 16, color: 'var(--ink-3)', fontSize: 12 }}>

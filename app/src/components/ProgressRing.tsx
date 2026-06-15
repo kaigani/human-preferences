@@ -11,13 +11,13 @@ export function ProgressRing({ percent, size = 64, stroke = 5 }: Props) {
   const offset = c - (clamped / 100) * c;
   return (
     <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-surface-recessed)" strokeWidth={stroke} />
       <circle
         cx={size / 2}
         cy={size / 2}
         r={r}
         fill="none"
-        stroke="var(--gold)"
+        stroke="var(--color-signal)"
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeDasharray={c}

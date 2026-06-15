@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
 import type { Choice, PairForJudging } from '@shared/types';
 
 /** Italicize the final word of a statement for editorial flair. */
@@ -21,16 +20,22 @@ interface Props {
 
 export function ABSurface({ pair, onSubmit, loading }: Props) {
   const [note, setNote] = useState('');
+  const [selected, setSelected] = useState<'a' | 'b' | null>(null);
   const noteRef = useRef<HTMLInputElement>(null);
   const busy = useRef(false);
 
   async function choose(choice: Choice) {
     if (busy.current || !pair) return;
     busy.current = true;
+    if (choice === 'a' || choice === 'b') {
+      setSelected(choice);
+      await new Promise((r) => setTimeout(r, 190)); // brief signal flash
+    }
     try {
       await onSubmit(choice, note.trim() || undefined);
       setNote('');
     } finally {
+      setSelected(null);
       busy.current = false;
     }
   }
@@ -69,38 +74,29 @@ export function ABSurface({ pair, onSubmit, loading }: Props) {
       {pair.axis && <div className="judge-axis">{pair.axis}</div>}
 
       <div style={{ marginTop: 18 }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={pair.id}
-            className="ab"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
-          >
-            <div className="ab-card" onClick={() => choose('a')} role="button" tabIndex={0}>
-              <div className="ab-top">
-                <span className="pick-label">Option A</span>
-                <span className="pick-kbd">A</span>
-              </div>
-              <Statement text={pair.options.a.content} />
+        <div key={pair.id} className="ab ab-enter">
+          <div className={`ab-card${selected === 'a' ? ' selected' : ''}`} onClick={() => choose('a')} role="button" tabIndex={0}>
+            <div className="ab-top">
+              <span className="pick-label">Option A</span>
+              <span className="pick-kbd">A</span>
             </div>
+            <Statement text={pair.options.a.content} />
+          </div>
 
-            <div className="ab-divider">
-              <span className="line" />
-              <span className="or">or</span>
-              <span className="line" />
-            </div>
+          <div className="ab-divider">
+            <span className="line" />
+            <span className="or">or</span>
+            <span className="line" />
+          </div>
 
-            <div className="ab-card" onClick={() => choose('b')} role="button" tabIndex={0}>
-              <div className="ab-top">
-                <span className="pick-label">Option B</span>
-                <span className="pick-kbd">B</span>
-              </div>
-              <Statement text={pair.options.b.content} />
+          <div className={`ab-card${selected === 'b' ? ' selected' : ''}`} onClick={() => choose('b')} role="button" tabIndex={0}>
+            <div className="ab-top">
+              <span className="pick-label">Option B</span>
+              <span className="pick-kbd">B</span>
             </div>
-          </motion.div>
-        </AnimatePresence>
+            <Statement text={pair.options.b.content} />
+          </div>
+        </div>
       </div>
 
       <div className="judge-controls">
