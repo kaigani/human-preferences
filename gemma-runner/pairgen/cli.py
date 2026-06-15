@@ -25,6 +25,7 @@ def main() -> None:
     ap.add_argument("--all-pending", action="store_true", help="process every job lacking COMPLETE.json")
     ap.add_argument("--mock", action="store_true", help="generate placeholder pairs without calling a model")
     ap.add_argument("--force", action="store_true", help="reprocess even if COMPLETE.json exists")
+    ap.add_argument("--quiet", action="store_true", help="hide the live thinking/content traces")
     ap.add_argument("--config", default=str(DEFAULT_CONFIG))
     args = ap.parse_args()
 
@@ -56,7 +57,7 @@ def main() -> None:
         if not (job_dir / "job.json").exists():
             print(f"  [warn] {job_dir.name}: no job.json, skipping")
             continue
-        runner.process_job(cfg, job_dir, mock=args.mock, force=args.force)
+        runner.process_job(cfg, job_dir, mock=args.mock, force=args.force, show_traces=not args.quiet)
     print("All done. Now ingest on the app machine:  npm run cli -- ingest-batch --job <job_id>")
 
 

@@ -17,6 +17,7 @@ class ProviderConfig:
     temperature: float
     num_ctx: int
     num_predict: int
+    think: bool = True
 
 
 @dataclass

@@ -1,8 +1,9 @@
-"""Ollama client (stdlib only) + robust JSON extraction + failure capture."""
+"""Ollama client (stdlib only) + live streaming traces + robust JSON + failure capture."""
 from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -16,20 +17,36 @@ class LLMError(Exception):
     pass
 
 
-def _post(url: str, payload: dict, timeout: int) -> dict:
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+# ── ANSI helpers (terminal traces) ──────────────────────────────────
+_DIM = "\033[2m"
+_RESET = "\033[0m"
+_CYAN = "\033[36m"
+_YELLOW = "\033[33m"
+_BOLD = "\033[1m"
 
 
-def chat(cfg: AppConfig, model: str, prompt: str, *, as_json: bool, label: str) -> str:
-    """Single non-streaming chat call. Retries on transient errors."""
+def _w(s: str) -> None:
+    sys.stdout.write(s)
+    sys.stdout.flush()
+
+
+def chat(
+    cfg: AppConfig,
+    model: str,
+    prompt: str,
+    *,
+    as_json: bool,
+    label: str,
+    think: bool = False,
+    show_traces: bool = True,
+) -> str:
+    """Streaming chat call. Prints thinking (dim) and content (bright) live.
+    Returns the full message content (thinking is shown but not returned)."""
     url = f"{cfg.provider.base_url}/api/chat"
-    payload = {
+    payload: dict = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "stream": False,
+        "stream": True,
         "keep_alive": "5m",
         "options": {
             "temperature": cfg.provider.temperature,
@@ -39,19 +56,67 @@ def chat(cfg: AppConfig, model: str, prompt: str, *, as_json: bool, label: str) 
     }
     if as_json:
         payload["format"] = "json"
+    if think:
+        payload["think"] = True
 
     last_err: Exception | None = None
     for attempt in range(cfg.run.max_retries + 1):
         try:
-            out = _post(url, payload, cfg.provider.timeout_seconds)
-            return out.get("message", {}).get("content", "")
+            return _stream(cfg, url, payload, label, show_traces)
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             last_err = e
             if attempt < cfg.run.max_retries:
                 wait = cfg.run.retry_backoff_seconds * (attempt + 1)
-                print(f"    [retry] {label}: {e} — waiting {wait}s")
+                _w(f"\n{_YELLOW}    [retry] {label}: {e} — waiting {wait}s{_RESET}\n")
                 time.sleep(wait)
     raise LLMError(f"{label}: {last_err}")
+
+
+def _stream(cfg: AppConfig, url: str, payload: dict, label: str, show_traces: bool) -> str:
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+    content_parts: list[str] = []
+    in_think = False
+    in_content = False
+
+    if show_traces:
+        _w(f"\n{_CYAN}{_BOLD}▶ {label}{_RESET}  {_DIM}[{payload['model']}]{_RESET}\n")
+
+    with urllib.request.urlopen(req, timeout=cfg.provider.timeout_seconds) as resp:
+        for raw in resp:
+            line = raw.decode("utf-8").strip()
+            if not line:
+                continue
+            chunk = json.loads(line)
+            if chunk.get("error"):
+                raise LLMError(str(chunk["error"]))
+            msg = chunk.get("message", {})
+            thinking = msg.get("thinking")
+            content = msg.get("content")
+
+            if thinking:
+                if show_traces:
+                    if not in_think:
+                        _w(f"{_DIM}  ┄┄┄ thinking ┄┄┄\n  ")
+                        in_think = True
+                    _w(thinking.replace("\n", "\n  "))
+            if content:
+                if show_traces:
+                    if not in_content:
+                        if in_think:
+                            _w(f"{_RESET}\n")
+                        _w(f"{_CYAN}  ┄┄┄ content ┄┄┄{_RESET}\n  ")
+                        in_content = True
+                    _w(content.replace("\n", "\n  "))
+                content_parts.append(content)
+
+            if chunk.get("done"):
+                break
+
+    if show_traces:
+        _w(f"{_RESET}\n")
+    return "".join(content_parts)
 
 
 # ── JSON extraction / repair ────────────────────────────────────────
@@ -69,7 +134,6 @@ def extract_json(text: str) -> dict:
         try:
             return json.loads(m.group(0))
         except json.JSONDecodeError:
-            # last resort: strip trailing commas
             cleaned = re.sub(r",\s*([}\]])", r"\1", m.group(0))
             return json.loads(cleaned)
     raise json.JSONDecodeError("no JSON object found", text, 0)
@@ -86,4 +150,4 @@ def capture_failure(cfg: AppConfig, label: str, prompt: str, raw: str, err: Exce
         f"=== PROMPT ===\n{prompt}\n\n=== RAW CONTENT ===\n{raw}\n",
         encoding="utf-8",
     )
-    print(f"    [failure] captured → {path.name}")
+    _w(f"{_YELLOW}    [failure] captured → {path.name}{_RESET}\n")
