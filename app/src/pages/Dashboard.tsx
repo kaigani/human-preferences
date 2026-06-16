@@ -1,24 +1,29 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ProgressRing } from '../components/ProgressRing';
 import { ABSurface } from '../components/ABSurface';
-import { useJudgeQueue } from '../useJudgeQueue';
-import { artFor } from '../themeArt';
+import { TasteLedger } from '../components/TasteLedger';
+import { SessionSummary } from '../components/SessionSummary';
+import { useSession } from '../useSession';
 import { api } from '../api';
-import type { StatsSummary } from '@shared/types';
+import type { RobustnessSummary } from '@shared/types';
 
 export function Dashboard({ name }: { name: string }) {
-  const [stats, setStats] = useState<StatsSummary | null>(null);
-  const navigate = useNavigate();
-  const { current, submit, loading, judgedCount } = useJudgeQueue();
+  const [rob, setRob] = useState<RobustnessSummary | null>(null);
+  const session = useSession(20);
 
   useEffect(() => {
-    api.stats().then(setStats).catch(() => {});
+    api.robustness().then(setRob).catch(() => {});
   }, []);
+  // keep the headline fresh as sets complete
+  useEffect(() => {
+    if (session.endR) setRob(session.endR);
+  }, [session.endR]);
 
-  const judged = (stats?.total_judged ?? 0) + judgedCount;
-  const percent = stats ? Math.min(100, (judged / stats.goal) * 100) : 0;
+  const live = session.endR ?? rob;
+  const robust = live?.robustness ?? 0;
+  const tier = live?.tier;
+  const regions = live?.regions ?? [];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -34,74 +39,58 @@ export function Dashboard({ name }: { name: string }) {
             <span className="italic">{name}.</span>
           </motion.h1>
           <p>
-            Your database, built on the shape of Stanford Human Preferences, learns what you
-            like — one A/B choice at a time. The more you judge, the truer your proxy becomes.
+            Your preferences, one A/B choice at a time. The map below fills as you judge —
+            and your profile grows more robust toward a proxy that judges the way you do.
           </p>
         </div>
 
         <div className="journey">
-          <div className="eyebrow">Your preference journey</div>
+          <div className="eyebrow">Profile robustness</div>
           <div className="ring-wrap">
             <div>
-              <div className="journey-count serif">{judged.toLocaleString()}</div>
-              <div className="journey-sub">PREFERENCES JUDGED</div>
+              <div className="journey-count mono">{robust}%</div>
+              <div className="journey-sub">
+                {(tier?.current ?? '—').toUpperCase()}
+                {tier?.next && <> · {tier.to_next.toLocaleString()} TO {tier.next.toUpperCase()}</>}
+              </div>
             </div>
-            <div style={{ position: 'relative' }}>
-              <ProgressRing percent={percent} size={72} />
-              <span
-                style={{
-                  position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
-                  fontSize: 12, fontWeight: 600, color: 'var(--ink-2)',
-                }}
-              >
-                {percent < 1 ? percent.toFixed(1) : Math.round(percent)}%
-              </span>
-            </div>
+            <ProgressRing percent={robust} size={72} />
           </div>
         </div>
       </div>
 
-      {/* ── today's question ── */}
+      {/* ── today's set ── */}
       <div className="section-head">
-        <span className="eyebrow">Today’s question</span>
-        <span className="eyebrow" style={{ color: 'var(--ink-3)' }}>A · B · N (no pref) · S (skip)</span>
-      </div>
-      <ABSurface pair={current} onSubmit={submit} loading={loading} />
-
-      {/* ── themes ── */}
-      <div className="section-head">
-        <span className="eyebrow">More topics</span>
-        <span className="text-link" onClick={() => navigate('/themes')} style={{ cursor: 'pointer' }}>
-          All themes →
+        <span className="eyebrow">Today’s set</span>
+        <span className="eyebrow" style={{ color: 'var(--color-text-muted)' }}>
+          {session.complete ? 'complete' : `${session.done} / ${session.total}`} · A · B · N · S
         </span>
       </div>
-      <div className="tiles">
-        {(stats?.by_theme ?? [])
-          .filter((t) => t.kind === 'abstract' || t.kind === 'current_events')
-          .slice(0, 5)
-          .map((t) => (
-          <div
-            className="tile"
-            key={t.theme_id}
-            onClick={() => navigate(`/judge?theme=${t.theme_id}`)}
-            style={{ cursor: 'pointer', '--tile-dot': artFor(t.theme_id) } as Record<string, string>}
-          >
-            <div className="swatch" style={{ background: artFor(t.theme_id) }} />
-            <div>
-              <div className="t-name">{t.label}</div>
-              <div className="t-count">{t.judged} judged · {t.queued} queued</div>
-            </div>
-          </div>
-        ))}
-        <div className="tile explore" onClick={() => navigate('/themes')} style={{ cursor: 'pointer' }}>
-          <div className="t-name italic">Explore<br />more →</div>
-          <div className="t-count">Generate new pairings</div>
-        </div>
-      </div>
+      {session.complete ? (
+        <SessionSummary
+          judged={session.total}
+          startR={session.startR}
+          endR={session.endR}
+          onNext={session.startNext}
+        />
+      ) : (
+        <ABSurface pair={session.current} onSubmit={session.submit} loading={session.loading} />
+      )}
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, margin: '46px 0 8px' }}>
-        <span className="big-counter serif">{(stats?.total_pairs ?? 0).toLocaleString()}+</span>
-        <span className="serif italic" style={{ fontSize: 22, color: 'var(--ink-2)' }}>questions. Infinite you.</span>
+      {/* ── taste map ── */}
+      <div className="section-head">
+        <span className="eyebrow">Your taste map</span>
+        <span className="eyebrow" style={{ color: 'var(--color-text-muted)' }}>
+          {tier?.next ? `unlocks ${tier.unlocks}` : tier?.unlocks}
+        </span>
+      </div>
+      <TasteLedger regions={regions} />
+
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, margin: '40px 0 8px' }}>
+        <span className="big-counter mono">{robust}%</span>
+        <span className="serif italic" style={{ fontSize: 22, color: 'var(--color-text-secondary)' }}>
+          {tier?.next ? `robust — ${(tier.to_next).toLocaleString()} to ${tier.next}.` : 'robust.'}
+        </span>
       </div>
     </motion.div>
   );

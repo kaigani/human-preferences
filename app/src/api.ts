@@ -1,6 +1,7 @@
 import type {
   JudgmentInput,
   PairForJudging,
+  RobustnessSummary,
   Session,
   StatsSummary,
   Theme,
@@ -21,6 +22,8 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 export const api = {
   me: () => http<{ display_name: string }>('/api/me'),
   stats: () => http<StatsSummary>('/api/stats'),
+  robustness: () => http<RobustnessSummary>('/api/profile/robustness'),
+  nextSet: (size = 20) => http<{ pairs: PairForJudging[] }>(`/api/sets/next?size=${size}`).then((r) => r.pairs),
   themes: () => http<{ themes: Theme[] }>('/api/themes').then((r) => r.themes),
   nextPairs: (count = 12, theme?: string) =>
     http<{ pairs: PairForJudging[] }>(

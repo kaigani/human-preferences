@@ -215,6 +215,26 @@ export interface StatsSummary {
   by_theme: Array<{ theme_id: string; label: string; kind: ThemeKind; judged: number; queued: number }>;
 }
 
+export type RegionStateName = 'unmapped' | 'sketch' | 'calibrated' | 'rich';
+
+export interface RegionStat {
+  id: string;
+  label: string;
+  judged: number;
+  queued: number;
+  state: RegionStateName;
+}
+
+export interface RobustnessSummary {
+  robustness: number;
+  breadth: number;
+  depth: number;
+  consistency: number;
+  total_judged: number;
+  tier: { current: string; next: string | null; to_next: number; unlocks: string };
+  regions: RegionStat[];
+}
+
 /** The portable export record (matches schema/preference-record.v1.json). */
 export interface PreferenceRecord {
   id: string;

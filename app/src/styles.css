@@ -340,6 +340,69 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .bar-fill { height: 100%; background: var(--color-blue-gray-600); border-radius: 99px; }
 .bar-row span:last-child { font-family: var(--mono); }
 
+/* ════════════════ Taste Ledger (typographic, no charts) ════════════════ */
+.ledger { margin-top: 4px; }
+.ledger-row {
+  display: grid;
+  grid-template-columns: 30px minmax(140px, 1.2fr) 1fr 90px;
+  align-items: center; gap: 18px;
+  padding: 13px 4px;
+  border-top: 1px solid var(--color-border-soft);
+  transition: background .15s;
+}
+.ledger-row:first-child { border-top: none; }
+.ledger-row:hover { background: var(--color-hover-bg); }
+.ledger-row.is-unmapped { opacity: 0.5; }
+.ledger-num { font-family: var(--mono); font-size: 11px; color: var(--color-text-faint); letter-spacing: 0.06em; }
+.ledger-label { font-family: var(--serif); font-size: 18px; color: var(--color-text-primary); }
+.dots { display: inline-flex; gap: 5px; align-items: center; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-blue-gray-200); }
+.dot.on { background: var(--color-text-secondary); }
+.dot.on.lit { background: var(--color-signal); box-shadow: 0 0 6px var(--color-signal-glow); }
+.ledger-dash { color: var(--color-text-faint); font-family: var(--mono); }
+.ledger-state {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: var(--letterspace-small); text-align: right;
+}
+.st-unmapped { color: var(--color-text-faint); }
+.st-sketch { color: var(--color-text-muted); }
+.st-calibrated { color: var(--color-text-primary); font-weight: 600; }
+.st-rich { color: var(--color-signal-active); font-weight: 600; }
+
+/* ════════════════ Tier ladder ════════════════ */
+.ladder { margin-top: 4px; }
+.tier-row {
+  display: grid;
+  grid-template-columns: 20px 150px 70px 1fr;
+  align-items: center; gap: 16px;
+  padding: 14px 4px;
+  border-top: 1px solid var(--color-border-soft);
+}
+.tier-row:first-child { border-top: none; }
+.tier-row.is-locked { opacity: 0.45; }
+.tier-marker { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--color-blue-gray-300); }
+.tier-marker.on { background: var(--color-text-secondary); border-color: var(--color-text-secondary); }
+.tier-row.is-current .tier-marker { background: var(--color-signal); border-color: var(--color-signal-active); box-shadow: 0 0 8px var(--color-signal-glow); }
+.tier-label { font-family: var(--serif); font-size: 18px; }
+.tier-row.is-current .tier-label { font-style: italic; }
+.tier-min { font-family: var(--mono); font-size: 12px; color: var(--color-text-muted); }
+.tier-unlocks { font-size: 13px; color: var(--color-text-secondary); }
+
+/* ════════════════ Session summary ════════════════ */
+.session-summary { padding: 36px 0 8px; }
+.session-summary h2 {
+  font-family: var(--serif); font-weight: 300; font-size: clamp(30px, 3.4vw, 44px);
+  margin-top: 8px; letter-spacing: -0.01em; color: var(--color-text-primary);
+}
+.session-summary h2 .italic { font-weight: 400; }
+.summary-stats { display: flex; gap: 56px; margin-top: 30px; flex-wrap: wrap; }
+.summary-stats > div { display: flex; flex-direction: column; gap: 8px; }
+.ss-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: var(--letterspace-label); color: var(--color-text-muted); }
+.ss-value { font-family: var(--mono); font-size: 26px; color: var(--color-text-primary); letter-spacing: -0.02em; }
+.ss-arrow { color: var(--color-text-faint); }
+.ss-now { color: var(--color-text-primary); }
+.ss-delta { color: var(--color-signal-active); }
+
 @media (max-width: 1080px) {
   .shell { grid-template-columns: var(--sidebar) 1fr; }
   .rail { display: none; }

@@ -1,74 +1,80 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { api } from '../api';
-import type { StatsSummary } from '@shared/types';
+import { TIERS } from '@shared/regions';
+import type { RobustnessSummary } from '@shared/types';
 
 export function Profile() {
-  const [stats, setStats] = useState<StatsSummary | null>(null);
+  const [rob, setRob] = useState<RobustnessSummary | null>(null);
 
   useEffect(() => {
-    api.stats().then(setStats).catch(() => {});
+    api.robustness().then(setRob).catch(() => {});
   }, []);
 
-  const themesWithPairs = (stats?.by_theme ?? []).filter((t) => t.judged + t.queued > 0);
-  const maxJudged = Math.max(1, ...themesWithPairs.map((t) => t.judged), 1);
+  const judged = rob?.total_judged ?? 0;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <div className="eyebrow">Profile</div>
       <h1 className="welcome serif" style={{ fontSize: 44, fontWeight: 300, margin: '10px 0 28px' }}>
-        Your taste,<br />in <span className="italic">numbers.</span>
+        How robust<br />is <span className="italic">you?</span>
       </h1>
 
+      {/* robustness headline + breakdown */}
       <div className="stat-grid">
         <div className="stat-cell">
-          <div className="label">Judged</div>
-          <div className="value serif">{(stats?.total_judged ?? 0).toLocaleString()}</div>
+          <div className="label">Robustness</div>
+          <div className="value serif">{rob?.robustness ?? 0}%</div>
         </div>
         <div className="stat-cell">
-          <div className="label">In queue</div>
-          <div className="value serif">{(stats?.queued ?? 0).toLocaleString()}</div>
+          <div className="label">Breadth</div>
+          <div className="value serif">{rob?.breadth ?? 0}%</div>
         </div>
         <div className="stat-cell">
-          <div className="label">Total pairs</div>
-          <div className="value serif">{(stats?.total_pairs ?? 0).toLocaleString()}</div>
+          <div className="label">Depth</div>
+          <div className="value serif">{rob?.depth ?? 0}%</div>
         </div>
         <div className="stat-cell">
-          <div className="label">Toward goal</div>
-          <div className="value serif">{(stats?.percent ?? 0).toFixed(1)}%</div>
+          <div className="label">Consistency</div>
+          <div className="value serif">{rob?.consistency ?? 0}%</div>
         </div>
       </div>
+      <p style={{ marginTop: 14, color: 'var(--color-text-muted)', fontSize: 13, fontFamily: 'var(--mono)', letterSpacing: '0.04em' }}>
+        {judged.toLocaleString()} DECISIVE JUDGMENTS · TIER: {(rob?.tier.current ?? '—').toUpperCase()}
+      </p>
 
+      {/* tier ladder */}
       <div className="section-head" style={{ marginTop: 44 }}>
-        <span className="eyebrow">By theme</span>
+        <span className="eyebrow">The ladder</span>
       </div>
-      <div>
-        {themesWithPairs.map((t) => (
-          <div className="bar-row" key={t.theme_id}>
-            <span className="serif" style={{ fontSize: 16 }}>{t.label}</span>
-            <span className="bar-track">
-              <span className="bar-fill" style={{ width: `${(t.judged / maxJudged) * 100}%` }} />
-            </span>
-            <span style={{ fontSize: 13, color: 'var(--ink-2)', textAlign: 'right' }}>{t.judged}</span>
-          </div>
-        ))}
+      <div className="ladder">
+        {TIERS.map((t) => {
+          const reached = judged >= t.min;
+          const isCurrent = rob?.tier.current === t.label;
+          return (
+            <div key={t.id} className={`tier-row${isCurrent ? ' is-current' : ''}${reached ? '' : ' is-locked'}`}>
+              <span className={`tier-marker${reached ? ' on' : ''}`} />
+              <span className="tier-label serif">{t.label}</span>
+              <span className="tier-min mono">{t.min.toLocaleString()}+</span>
+              <span className="tier-unlocks">{t.unlocks}</span>
+            </div>
+          );
+        })}
       </div>
 
+      {/* exports */}
       <div className="section-head" style={{ marginTop: 44 }}>
         <span className="eyebrow">Export your taste</span>
       </div>
-      <p style={{ color: 'var(--ink-2)', fontSize: 14, maxWidth: '40em', lineHeight: 1.6 }}>
-        Your judgments, ready to use elsewhere. The DPO set fine-tunes a proxy; the
-        rubric drops into any model as a system prompt so it judges the way you would.
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 14, maxWidth: '40em', lineHeight: 1.6 }}>
+        The rubric drops into any model as a system prompt so it judges the way you would; the DPO
+        set fine-tunes a proxy. Both export now — they sharpen as your robustness climbs.
       </p>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 20 }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 20, alignItems: 'center' }}>
         <a className="btn-gold" href="/api/export/rubric" download>Taste rubric (.md) ↓</a>
         <a className="btn-gold" href="/api/export/dpo" download style={{ background: 'var(--color-action)', color: 'var(--color-text-inverse)', border: '1px solid var(--color-action)', boxShadow: 'none' }}>DPO dataset (.jsonl) ↓</a>
         <a className="text-link" href="/api/export/records" download style={{ alignSelf: 'center' }}>Portable records (.json) ↓</a>
       </div>
-      <p style={{ marginTop: 16, color: 'var(--ink-3)', fontSize: 12 }}>
-        Skip / no-preference judgments are kept in the portable records but excluded from the DPO set.
-      </p>
     </motion.div>
   );
 }

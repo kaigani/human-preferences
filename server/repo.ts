@@ -2,6 +2,7 @@
 // Shared by the server routes and (some) worker code.
 import { nanoid } from 'nanoid';
 import { getDb } from './db.js';
+import { regionForTheme } from '../shared/regions.js';
 import type {
   Choice,
   JudgmentInput,
@@ -64,9 +65,8 @@ const selectQueueByTheme = db.prepare(`
   LIMIT ?
 `);
 
-export function getNextPairs(limit = 10, themeId?: string): PairForJudging[] {
-  const rows = (themeId ? selectQueueByTheme.all(themeId, limit) : selectQueueAll.all(limit)) as any[];
-  return rows.map((r) => ({
+function rowToPair(r: any): PairForJudging {
+  return {
     id: r.id,
     context: r.context,
     content_type: r.content_type,
@@ -75,10 +75,53 @@ export function getNextPairs(limit = 10, themeId?: string): PairForJudging[] {
       b: { content: r.option_b, meta: parseMeta(r.b_meta_json) },
     },
     axis: r.axis,
-    theme: r.theme_id
-      ? { id: r.theme_id, label: r.theme_label, kind: r.theme_kind }
-      : null,
-  }));
+    theme: r.theme_id ? { id: r.theme_id, label: r.theme_label, kind: r.theme_kind } : null,
+  };
+}
+
+export function getNextPairs(limit = 10, themeId?: string): PairForJudging[] {
+  const rows = (themeId ? selectQueueByTheme.all(themeId, limit) : selectQueueAll.all(limit)) as any[];
+  return rows.map(rowToPair);
+}
+
+// Pool of queued pairs to assemble region-spanning sets from.
+const selectPool = db.prepare(`
+  SELECT p.id, p.context, p.content_type, p.option_a, p.option_b,
+         p.a_meta_json, p.b_meta_json, p.axis,
+         t.id AS theme_id, t.label AS theme_label, t.kind AS theme_kind
+  FROM pairs p
+  LEFT JOIN themes t ON t.id = p.theme_id
+  WHERE p.status = 'queued'
+  ORDER BY p.created_at
+  LIMIT 600
+`);
+
+/** Assemble a set of ~`size` pairs that spans regions — round-robins across the
+ *  regions present in the queue so each session feels varied, favoring the
+ *  thinnest regions first to drive breadth. */
+export function getSet(size = 20): PairForJudging[] {
+  const pool = selectPool.all() as any[];
+  const buckets = new Map<string, any[]>();
+  for (const r of pool) {
+    const reg = regionForTheme(r.theme_id, r.theme_kind);
+    (buckets.get(reg) ?? buckets.set(reg, []).get(reg)!).push(r);
+  }
+  // order regions by how few queued they have (thinnest first), then round-robin
+  const regionsByThinness = [...buckets.entries()].sort((a, b) => a[1].length - b[1].length).map(([k]) => k);
+  const out: any[] = [];
+  let added = true;
+  while (out.length < size && added) {
+    added = false;
+    for (const reg of regionsByThinness) {
+      const b = buckets.get(reg)!;
+      if (b.length) {
+        out.push(b.shift());
+        added = true;
+        if (out.length >= size) break;
+      }
+    }
+  }
+  return out.map(rowToPair);
 }
 
 // ── judgments ───────────────────────────────────────────────────────

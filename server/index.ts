@@ -6,10 +6,12 @@ import {
   endSession,
   getFeed,
   getNextPairs,
+  getSet,
   getStats,
   listThemes,
   recordJudgment,
 } from './repo.js';
+import { getRobustness } from './robustness.js';
 import { buildDpoJsonl, buildRecords, buildRubric } from '../export/build.js';
 import type { Choice, JudgmentInput } from '@shared/types.js';
 
@@ -96,6 +98,14 @@ app.get('/api/export/rubric', async (_req, reply) => {
     .header('content-type', 'text/markdown')
     .header('content-disposition', 'attachment; filename="taste-rubric.md"')
     .send(markdown);
+});
+
+// ── progression ──
+app.get('/api/profile/robustness', async () => getRobustness());
+
+app.get<{ Querystring: { size?: string } }>('/api/sets/next', async (req) => {
+  const size = Math.min(40, Math.max(5, Number(req.query.size ?? 20) || 20));
+  return { pairs: getSet(size) };
 });
 
 // ── stats ──

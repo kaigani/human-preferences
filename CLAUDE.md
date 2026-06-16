@@ -55,6 +55,14 @@ The runner expands each into opinionated A/B stances (`opinion_stance_v1`).
 Good pairs: both options genuinely preferable (no strawman), one crisp sentence
 each, a named `axis`. Current-events pairs should frame **values**, not partisanship.
 
+## Progression ("Taste Map")
+The dashboard is a progression frame, not a flat queue (`shared/regions.ts` + `server/robustness.ts`):
+- **Regions** group themes (ideas / living / power / culture / narrative / visual / now). `regionForTheme()` maps each theme to one.
+- **Robustness** (0–100) = 0.4·breadth + 0.4·depth + 0.2·consistency. Breadth = % of *active* regions ≥ `CALIBRATED_AT`; depth = avg fill toward `RICH_AT`; consistency = decisiveness (v1). `GET /api/profile/robustness`.
+- **Tiers** (`TIERS`): Sketch → Calibrated (1k, unlocks rubric) → Proxy-ready (5k, DPO) → Robust (10k). Gated by decisive (a/b) judgment count.
+- **Sets**: `GET /api/sets/next?size=20` assembles a region-spanning sitting (thinnest regions first). The dashboard judges by set with an end-of-set summary; the Questions page stays continuous/per-theme.
+- **Aesthetic rule:** progression UI is strictly typographic — ledger index, dotted fills, tier words, electric-yellow highlight only. No charts/graphs.
+
 ## Redundancy / semantic dedup
 Two layers keep near-identical pairs out of the judge queue:
 1. **Generation diversity** — abstract themes use distinct facets per seed (`worker/seeds/themes.ts`); SHP selection round-robins across domains.
