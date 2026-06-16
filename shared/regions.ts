@@ -61,6 +61,9 @@ export const TIERS: Tier[] = [
   { id: 'calibrated', label: 'Calibrated', min: 1000, unlocks: 'LLM-judge rubric' },
   { id: 'proxy', label: 'Proxy-ready', min: 5000, unlocks: 'DPO fine-tune set' },
   { id: 'robust', label: 'Robust', min: 10000, unlocks: 'Strong cross-domain proxy' },
+  { id: 'highfidelity', label: 'High-fidelity', min: 25000, unlocks: 'A nuanced proxy across every region' },
+  { id: 'mirror', label: 'Mirror', min: 50000, unlocks: 'A proxy that reads as unmistakably you' },
+  { id: 'mindfile', label: 'Mindfile', min: 100000, unlocks: 'The complete corpus — infinite you' },
 ];
 
 export function tierForCount(n: number): { current: Tier; next: Tier | null; toNext: number } {
