@@ -415,6 +415,15 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .ss-arrow { color: var(--color-text-faint); }
 .ss-now { color: var(--color-text-primary); }
 .ss-delta { color: var(--color-signal-active); }
+.ss-streak { font-size: 13px; color: var(--color-text-muted); }
+
+/* streak indicator (dashboard) */
+.journey-streak {
+  font-family: var(--mono); font-size: 10px; letter-spacing: var(--letterspace-small);
+  color: var(--color-text-muted); margin-top: 8px;
+  display: inline-flex; align-items: center; gap: 7px; justify-content: flex-end;
+}
+.streak-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-signal); box-shadow: 0 0 7px var(--color-signal-glow); }
 
 @media (max-width: 1080px) {
   .shell { grid-template-columns: var(--sidebar) 1fr; }

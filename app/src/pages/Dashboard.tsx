@@ -53,6 +53,11 @@ export function Dashboard({ name }: { name: string }) {
                 {(tier?.current ?? '—').toUpperCase()}
                 {tier?.next && <> · {tier.to_next.toLocaleString()} TO {tier.next.toUpperCase()}</>}
               </div>
+              {!!live?.streak && (
+                <div className="journey-streak">
+                  <span className="streak-dot" /> {live.streak}-DAY STREAK
+                </div>
+              )}
             </div>
             <ProgressRing percent={robust} size={72} />
           </div>

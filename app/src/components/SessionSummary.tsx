@@ -37,6 +37,12 @@ export function SessionSummary({ judged, startR, endR, onNext }: Props) {
           <span className="ss-label">To {endR?.tier.next ?? '—'}</span>
           <span className="ss-value mono">{(endR?.tier.to_next ?? 0).toLocaleString()}</span>
         </div>
+        <div>
+          <span className="ss-label">Streak</span>
+          <span className="ss-value mono">
+            {(endR?.streak ?? startR?.streak ?? 0)}<span className="ss-streak"> day{(endR?.streak ?? 0) === 1 ? '' : 's'}</span>
+          </span>
+        </div>
       </div>
 
       <button className="btn-gold" onClick={onNext} style={{ marginTop: 28 }}>

@@ -65,7 +65,21 @@ file/ingest protocol, from three sources:
 | **SHP corpus** | `npm run import:shp -- --spread --limit 2000` streams Reddit posts as *seed topics* (not pre-made pairs); generation turns each into opinionated A/B stances. |
 | **Claude Code** | Drive [Claude Code](https://claude.com/claude-code) in this repo to author high-quality or current-events pairs directly, then `ingest-file`. |
 
+Plus two non-text regions: **Narrative** ("which would you rather watch/read?" across
+film/tv/books/music/games) and **Visual** (`npm run fetch:images` pulls a CC0 art set from
+the Art Institute of Chicago into the repo; `npm run import:images` pairs them — the Judge
+view renders images in the same A/B chrome).
+
 See [`CLAUDE.md`](CLAUDE.md) for the exact commands and the `GeneratedPairLine` shape.
+
+## Progression — the Taste Map
+
+The dashboard isn't a flat queue. Your themes group into **regions** (ideas / daily life /
+power / culture / narrative / visual / the now), and a single **Robustness** score
+(breadth × depth × consistency) tracks how complete your profile is. Judge in **sets** of ~20
+that span regions; a **tier ladder** (Sketch → Calibrated → Proxy-ready → Robust →
+High-fidelity → Mirror → **Mindfile**) marks what each volume of judgments unlocks — from an
+LLM-judge rubric to a full fine-tune. All typographic; no charts.
 
 ## Exporting your taste
 

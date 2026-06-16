@@ -233,6 +233,7 @@ export interface RobustnessSummary {
   breadth: number;
   depth: number;
   consistency: number;
+  streak: number;
   total_judged: number;
   tier: { current: string; next: string | null; to_next: number; unlocks: string };
   regions: RegionStat[];

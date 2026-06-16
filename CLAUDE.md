@@ -62,6 +62,12 @@ The dashboard is a progression frame, not a flat queue (`shared/regions.ts` + `s
 - **Tiers** (`TIERS`): Sketch → Calibrated (1k, unlocks rubric) → Proxy-ready (5k, DPO) → Robust (10k). Gated by decisive (a/b) judgment count.
 - **Sets**: `GET /api/sets/next?size=20` assembles a region-spanning sitting (thinnest regions first). The dashboard judges by set with an end-of-set summary; the Questions page stays continuous/per-theme.
 - **Aesthetic rule:** progression UI is strictly typographic — ledger index, dotted fills, tier words, electric-yellow highlight only. No charts/graphs.
+- **Streaks:** consecutive judging days (computed from `judgments.created_at`), shown on the dashboard + session summary.
+
+### Region content sources
+- **Narrative** (film/tv/books/music/games, kind `narrative`): Claude-authored "which would you rather" pairs (see /tmp pattern), or the `narrative_pick_v1` runner prompt for bulk. Themes: `film`/`television`/`books`/`music`/`games`.
+- **Visual** (kind `visual`): `npm run fetch:images` downloads CC0 art from the Art Institute of Chicago into `app/public/images/` (web-sized, bundled in repo so the set is identical for everyone); `npm run import:images` pairs them within category as `content_type:image_ref`. The Judge view renders images in the same A/B card chrome.
+- **Consistency (future):** currently decisiveness; the planned re-test calibration (re-ask a paraphrase, measure flip-rate) would make it a true reliability signal.
 
 ## Redundancy / semantic dedup
 Two layers keep near-identical pairs out of the judge queue:
