@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import random
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -123,15 +124,20 @@ def process_job(cfg: AppConfig, job_dir: Path, *, mock: bool = False, force: boo
     seeds = _read_jsonl(job_dir / "seeds.jsonl")
     print(f"  [job] {job['job_id']} — {len(seeds)} seed(s), model={'mock' if mock else cfg.provider.writer_model}")
 
+    started_at = datetime.now()
+    t0 = time.time()
     all_lines: list[dict] = []
     failures = 0
     for i, seed in enumerate(seeds, 1):
+        ts0 = time.time()
         lines = _generate_for_seed(cfg, job, seed, mock=mock, show_traces=show_traces, think=eff_think)
+        dur = time.time() - ts0
         if not lines:
             failures += 1
         all_lines.extend(lines)
-        print(f"    [{i}/{len(seeds)}] {seed['seed_id']} → {len(lines)} pair(s)")
+        print(f"    [{i}/{len(seeds)}] {seed['seed_id']} → {len(lines)} pair(s)  ({dur:.0f}s)")
 
+    elapsed = time.time() - t0
     _write_jsonl(job_dir / "pairs.jsonl", all_lines)
     manifest = {
         "job_id": job["job_id"],
@@ -139,11 +145,17 @@ def process_job(cfg: AppConfig, job_dir: Path, *, mock: bool = False, force: boo
         "produced_count": len(all_lines),
         "seed_count": len(seeds),
         "failures": failures,
+        "started_at": started_at.isoformat(),
         "completed_at": datetime.now().isoformat(),
+        "elapsed_seconds": round(elapsed, 1),
+        "seconds_per_seed": round(elapsed / len(seeds), 1) if seeds else None,
         "model": "mock" if mock else cfg.provider.writer_model,
     }
     complete_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    print(f"  [done] {job['job_id']} → {len(all_lines)} pair(s), {failures} seed failure(s)")
+    print(
+        f"  [done] {job['job_id']} → {len(all_lines)} pair(s), {failures} failure(s) "
+        f"in {elapsed / 60:.1f} min ({manifest['seconds_per_seed']}s/seed)"
+    )
     return manifest
 
 

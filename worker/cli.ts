@@ -3,7 +3,7 @@
 //   ingest-batch read a finished job's pairs.jsonl back into SQLite
 //   ingest-file  ingest an arbitrary pairs.jsonl (Claude-Code / manual path)
 //   list-jobs    show jobs in the shared folder and their state
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getDb, migrate } from '../server/db.js';
 import { themeSeeds } from './seeds/themes.js';
@@ -96,6 +96,13 @@ switch (cmd) {
     const path = join(jobDir(job), 'pairs.jsonl');
     if (!existsSync(path)) throw new Error(`no pairs.jsonl found for job ${job} at ${path}`);
     const res = ingestFromFile(path, job);
+    const completePath = join(jobDir(job), 'COMPLETE.json');
+    if (existsSync(completePath)) {
+      const m = JSON.parse(readFileSync(completePath, 'utf8'));
+      if (m.elapsed_seconds != null) {
+        console.log(`  generated in ${(m.elapsed_seconds / 60).toFixed(1)} min (${m.seconds_per_seed}s/seed)`);
+      }
+    }
     writeManifest(job, {
       job_id: job,
       status: 'complete',
