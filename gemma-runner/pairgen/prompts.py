@@ -54,9 +54,29 @@ Return ONLY JSON of this exact shape:
 {{"pairs": [{{"context": "...", "option_a": "...", "option_b": "...", "axis": "...", "strength": 0.8}}]}}
 """
 
+NARRATIVE_PICK_V1 = """\
+You generate "which would you rather experience?" preference pairs about CULTURE
+({theme_label}) — film, television, books, music, or games.
+
+CATEGORY SEED: {context}
+CONTRAST HINT (optional): {axis_hint}
+
+Produce {n} distinct pairs. For EACH pair:
+- "context": a short framing like "Which would you rather watch tonight?" (fit the category).
+- "option_a" and "option_b": two REAL, well-known works in this category, each with a
+  one-line evocative hook ("Title — hook."). Pick works that genuinely contrast in mood,
+  era, or sensibility so the choice reveals taste. Both must be appealing; this is about
+  pull, not quality. Vary your picks widely across the {n} pairs.
+- "axis": 2-5 words naming the taste contrast (e.g. "contemplative vs kinetic").
+- "strength": 0..1 confidence this is a clean taste contrast.
+
+Return ONLY JSON: {{"pairs": [{{"context": "...", "option_a": "...", "option_b": "...", "axis": "...", "strength": 0.8}}]}}
+"""
+
 WRITERS = {
     "stance_contrast_v1": WRITER_TEMPLATE_V1,
     "opinion_stance_v1": OPINION_STANCE_V1,
+    "narrative_pick_v1": NARRATIVE_PICK_V1,
 }
 
 
