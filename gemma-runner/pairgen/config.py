@@ -18,6 +18,8 @@ class ProviderConfig:
     num_ctx: int
     num_predict: int
     think: bool = True
+    embedding_model: str | None = None
+    embed: bool = False
 
 
 @dataclass

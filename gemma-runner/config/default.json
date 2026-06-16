@@ -10,7 +10,9 @@
     "temperature": 0.9,
     "num_ctx": 16384,
     "num_predict": 4096,
-    "think": false
+    "think": false,
+    "embedding_model": "mxbai-embed-large",
+    "embed": true
   },
   "run": {
     "jobs_dir": "jobs",

@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 import 'dotenv/config';
 import { getDb } from '../server/db.js';
 import { pairContentHash } from '../shared/hash.js';
+import { cosine } from '../shared/cosine.js';
 import type {
   BatchManifest,
   GeneratedPairLine,
@@ -74,12 +75,46 @@ const insertPair = db.prepare(`
   INSERT OR IGNORE INTO pairs
     (id, schema_version, seed_id, theme_id, context, content_type,
      option_a, option_b, generator_provider, generator_model,
-     generator_prompt_id, generation_strength, axis, content_hash, status)
+     generator_prompt_id, generation_strength, axis, content_hash,
+     status, embedding, flagged_reason)
   VALUES
     (@id, 1, @seed_id, @theme_id, @context, @content_type,
      @option_a, @option_b, @provider, @model,
-     @prompt_id, @strength, @axis, @content_hash, 'queued')
+     @prompt_id, @strength, @axis, @content_hash,
+     @status, @embedding, @flagged_reason)
 `);
+
+// Cosine threshold above which a new pair is treated as a near-duplicate.
+export const DEDUP_THRESHOLD = Number(process.env.DEDUP_THRESHOLD ?? 0.9);
+
+const selectThemeEmbeds = db.prepare(
+  `SELECT id, embedding FROM pairs
+   WHERE theme_id IS @theme AND embedding IS NOT NULL AND status IN ('queued','judged')`,
+);
+
+/** Load kept (non-flagged) embedded pairs for a theme into memory. */
+function loadThemeVectors(themeId: string | null): Array<{ id: string; vec: number[] }> {
+  const rows = selectThemeEmbeds.all({ theme: themeId }) as Array<{ id: string; embedding: string }>;
+  const out: Array<{ id: string; vec: number[] }> = [];
+  for (const r of rows) {
+    try {
+      out.push({ id: r.id, vec: JSON.parse(r.embedding) });
+    } catch {
+      /* skip unparseable */
+    }
+  }
+  return out;
+}
+
+/** Nearest existing vector by cosine; null if none. */
+function nearest(vec: number[], pool: Array<{ id: string; vec: number[] }>): { id: string; sim: number } | null {
+  let best: { id: string; sim: number } | null = null;
+  for (const p of pool) {
+    const sim = cosine(vec, p.vec);
+    if (!best || sim > best.sim) best = { id: p.id, sim };
+  }
+  return best;
+}
 const recordJob = db.prepare(`
   INSERT INTO generation_jobs
     (id, status, provider, model, source_type, params_json, requested_count, produced_count, finished_at)
@@ -96,18 +131,22 @@ export interface IngestResult {
   read: number;
   inserted: number;
   duplicates: number;
+  flagged: number;
 }
 
-/** Ingest an array of generated pair lines. Idempotent (content_hash dedup). */
+/** Ingest an array of generated pair lines. Idempotent (content_hash dedup).
+ *  Embedded pairs whose cosine similarity to a kept pair in the same theme is
+ *  ≥ DEDUP_THRESHOLD are inserted as 'flagged' (kept out of the judge queue). */
 export const ingestPairs = db.transaction(
   (lines: GeneratedPairLine[], jobId: string): IngestResult => {
     let inserted = 0;
+    let flagged = 0;
+    const vecCache = new Map<string, Array<{ id: string; vec: number[] }>>();
+
     for (const line of lines) {
       // ensure theme exists (FK) — upsert a minimal row if unknown
       if (line.theme_id) {
-        const label = line.theme_id.includes(':')
-          ? line.theme_id.split(':')[1]
-          : line.theme_id;
+        const label = line.theme_id.includes(':') ? line.theme_id.split(':')[1] : line.theme_id;
         upsertTheme.run(line.theme_id, label, kindForSource(line.source_type));
       }
       // ensure seed exists (FK)
@@ -118,9 +157,31 @@ export const ingestPairs = db.transaction(
         theme_id: line.theme_id,
         context: line.seed_context ?? line.context,
       });
+
+      // semantic-dedup decision
+      let status = 'queued';
+      let flagged_reason: string | null = null;
+      let embeddingJson: string | null = null;
+      const vec = line.embedding;
+      const key = line.theme_id ?? '__null__';
+      if (vec && vec.length) {
+        embeddingJson = JSON.stringify(vec);
+        let pool = vecCache.get(key);
+        if (!pool) {
+          pool = loadThemeVectors(line.theme_id ?? null);
+          vecCache.set(key, pool);
+        }
+        const near = nearest(vec, pool);
+        if (near && near.sim >= DEDUP_THRESHOLD) {
+          status = 'flagged';
+          flagged_reason = `near-dup of ${near.id} (cos ${near.sim.toFixed(3)})`;
+        }
+      }
+
       const content_hash = pairContentHash(line.context, line.option_a, line.option_b);
+      const id = `pair_${nanoid(12)}`;
       const info = insertPair.run({
-        id: `pair_${nanoid(12)}`,
+        id,
         seed_id: line.seed_id,
         theme_id: line.theme_id,
         context: line.context,
@@ -133,8 +194,20 @@ export const ingestPairs = db.transaction(
         strength: line.strength ?? null,
         axis: line.axis,
         content_hash,
+        status,
+        embedding: embeddingJson,
+        flagged_reason,
       });
-      inserted += info.changes;
+
+      if (info.changes) {
+        inserted += 1;
+        if (status === 'flagged') {
+          flagged += 1;
+        } else if (vec && vec.length) {
+          // compare later pairs in this batch against this one too
+          vecCache.get(key)!.push({ id, vec });
+        }
+      }
     }
 
     recordJob.run({
@@ -147,7 +220,7 @@ export const ingestPairs = db.transaction(
       produced_count: inserted,
     });
 
-    return { read: lines.length, inserted, duplicates: lines.length - inserted };
+    return { read: lines.length, inserted, duplicates: lines.length - inserted, flagged };
   },
 );
 

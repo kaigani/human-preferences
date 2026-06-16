@@ -96,6 +96,19 @@ def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, sho
             "model": cfg.provider.writer_model if not mock else "mock",
             "prompt_id": prompt_id,
         })
+
+    # embed each pair for semantic dedup on the app side
+    if not mock and cfg.provider.embed and cfg.provider.embedding_model and lines:
+        for ln in lines:
+            try:
+                txt = f"{ln['context']} || {ln['option_a']} || {ln['option_b']}"
+                ln["embedding"] = llm.embed(cfg, cfg.provider.embedding_model, txt)
+            except Exception:  # noqa: BLE001 — embedding is best-effort
+                ln["embedding"] = None
+        if show_traces:
+            n_ok = sum(1 for ln in lines if ln.get("embedding"))
+            llm._w(f"{llm._DIM}  embedded {n_ok}/{len(lines)} pair(s) [{cfg.provider.embedding_model}]{llm._RESET}\n")
+
     return lines
 
 

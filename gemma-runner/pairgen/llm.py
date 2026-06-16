@@ -119,6 +119,23 @@ def _stream(cfg: AppConfig, url: str, payload: dict, label: str, show_traces: bo
     return "".join(content_parts)
 
 
+# ── embeddings ──────────────────────────────────────────────────────
+def embed(cfg: AppConfig, model: str, text: str) -> list[float]:
+    """Embed a single string via Ollama. Returns the vector."""
+    url = f"{cfg.provider.base_url}/api/embed"
+    data = json.dumps({"model": model, "input": text}).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=cfg.provider.timeout_seconds) as resp:
+        out = json.loads(resp.read().decode("utf-8"))
+    embs = out.get("embeddings")
+    if embs and isinstance(embs, list):
+        return embs[0]
+    one = out.get("embedding")
+    if one:
+        return one
+    raise LLMError(f"no embedding returned for model {model}")
+
+
 # ── JSON extraction / repair ────────────────────────────────────────
 _JSON_BLOCK = re.compile(r"\{.*\}", re.DOTALL)
 

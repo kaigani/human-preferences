@@ -189,6 +189,8 @@ export interface GeneratedPairLine {
   provider: GeneratorProvider;
   model: string | null;
   prompt_id: string | null;
+  /** Optional embedding vector (computed by the runner) for semantic dedup. */
+  embedding?: number[] | null;
 }
 
 /** COMPLETE.json — written by the runner when a job finishes. */

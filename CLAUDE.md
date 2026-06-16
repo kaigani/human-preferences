@@ -55,6 +55,20 @@ The runner expands each into opinionated A/B stances (`opinion_stance_v1`).
 Good pairs: both options genuinely preferable (no strawman), one crisp sentence
 each, a named `axis`. Current-events pairs should frame **values**, not partisanship.
 
+## Redundancy / semantic dedup
+Two layers keep near-identical pairs out of the judge queue:
+1. **Generation diversity** — abstract themes use distinct facets per seed (`worker/seeds/themes.ts`); SHP selection round-robins across domains.
+2. **Embeddings** — the runner embeds each pair (Ollama `mxbai-embed-large`) and includes the vector in `pairs.jsonl`. At ingest, a pair whose cosine similarity to a kept pair in the same theme is ≥ `DEDUP_THRESHOLD` (default 0.9, env-tunable) is stored as `status='flagged'` (out of the queue, reversible).
+
+Backfill + audit existing pairs:
+```bash
+npm run cli -- export-embed            # writes embed/requests.jsonl to the shared folder
+# on the PC:  python3 -m pairgen.cli embed
+npm run cli -- ingest-embeddings       # stores the vectors
+npm run cli -- audit-dupes [--theme <id>] [--threshold 0.9] [--apply]
+```
+`audit-dupes` greedy-clusters per theme (earliest pair is the representative); `--apply` flags only `queued` near-dups, never `judged` ones.
+
 ## Conventions
 - Keep the judge queue clean: only ingest real, high-quality pairs (delete test/mock).
 - Personal data is gitignored (`data/`, `*.db`, `exports/`, `.env`). Code is public.

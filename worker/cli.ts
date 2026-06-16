@@ -9,6 +9,7 @@ import { getDb, migrate } from '../server/db.js';
 import { themeSeeds } from './seeds/themes.js';
 import { selectShpSeeds } from './seeds/select-shp.js';
 import {
+  DEDUP_THRESHOLD,
   SHARED_DIR,
   ingestPairs,
   jobDir,
@@ -18,6 +19,7 @@ import {
   writeJob,
   writeManifest,
 } from './protocol.js';
+import { auditDupes, exportEmbedRequests, ingestEmbeddings } from './embeddings.js';
 import type { GeneratedPairLine, JobSpec, SeedLine } from '../shared/types.js';
 
 migrate(getDb());
@@ -41,7 +43,10 @@ const f = flags(rest);
 function ingestFromFile(path: string, jobId: string) {
   const lines = readJsonl<GeneratedPairLine>(path);
   const res = ingestPairs(lines, jobId);
-  console.log(`✓ Ingested ${res.inserted} new pair(s) (${res.duplicates} dup) from ${lines.length} line(s).`);
+  const flaggedNote = res.flagged ? `, ${res.flagged} flagged near-dup` : '';
+  console.log(
+    `✓ Ingested ${res.inserted} new pair(s) (${res.inserted - res.flagged} queued${flaggedNote}, ${res.duplicates} exact dup) from ${lines.length} line(s).`,
+  );
   return res;
 }
 
@@ -124,10 +129,45 @@ switch (cmd) {
     break;
   }
 
+  case 'export-embed': {
+    const { count, path } = exportEmbedRequests();
+    console.log(`✓ Wrote ${count} embed request(s) → ${path}`);
+    if (count) console.log(`  On the PC:  python3 -m pairgen.cli embed   →  then: npm run cli -- ingest-embeddings`);
+    else console.log('  (every pair already has an embedding)');
+    break;
+  }
+
+  case 'ingest-embeddings': {
+    const { updated, missing } = ingestEmbeddings();
+    console.log(`✓ Stored ${updated} embedding(s)${missing ? ` (${missing} returned empty)` : ''}.`);
+    console.log(`  Next: npm run cli -- audit-dupes${f.apply ? '' : ' [--apply]'}`);
+    break;
+  }
+
+  case 'audit-dupes': {
+    const threshold = Number(f.threshold ?? DEDUP_THRESHOLD);
+    const apply = 'apply' in f;
+    const { scanned, dupes, applied } = auditDupes({ theme: f.theme, threshold, apply });
+    console.log(`Scanned ${scanned} embedded pair(s) at cosine ≥ ${threshold}. Found ${dupes.length} near-duplicate(s).`);
+    for (const d of dupes.slice(0, 25)) {
+      console.log(`  • ${d.sim.toFixed(3)}  ${d.judged ? '[judged] ' : ''}${d.theme ?? ''}`);
+      console.log(`      “${d.context.slice(0, 70)}”`);
+      console.log(`      ~ “${d.of_context.slice(0, 70)}”  (${d.dup_of})`);
+    }
+    if (dupes.length > 25) console.log(`  … and ${dupes.length - 25} more`);
+    if (apply) console.log(`✓ Flagged ${applied} queued near-dup(s) (judged pairs left untouched).`);
+    else if (dupes.length) console.log(`  Re-run with --apply to flag these out of the queue.`);
+    break;
+  }
+
   default:
     console.log(`Usage: npm run cli -- <command>
-  export-job   --source theme --theme <id> [--seeds 20] [--pairs-per-seed 5] [--provider ollama] [--model gemma2]
-  ingest-batch --job <job_id>
-  ingest-file  --file <path-to-pairs.jsonl> [--job <id>]
-  list-jobs`);
+  export-job        --source theme --theme <id> [--seeds 20] [--pairs-per-seed 5]
+  export-job        --source shp [--theme shp:<domain>] [--seeds 20] [--pairs-per-seed 2]
+  ingest-batch      --job <job_id>
+  ingest-file       --file <path-to-pairs.jsonl> [--job <id>]
+  list-jobs
+  export-embed                            backfill: write texts needing embeddings
+  ingest-embeddings                       backfill: store vectors the PC produced
+  audit-dupes       [--theme <id>] [--threshold 0.9] [--apply]`);
 }
