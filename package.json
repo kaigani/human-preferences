@@ -16,6 +16,8 @@
     "dev": "concurrently -n server,app -c blue,magenta \"npm run server\" \"npm run app\"",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "import:shp": "tsx worker/seeds/import-shp.ts",
+    "import:images": "tsx worker/seeds/import-images.ts",
+    "fetch:images": "python3 scripts/fetch-images.py",
     "cli": "tsx worker/cli.ts",
     "export:dpo": "tsx export/dpo.ts",
     "export:rubric": "tsx export/rubric.ts",

@@ -247,6 +247,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .ab-card .statement .accent { font-style: italic; }
 .ab-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
 
+/* image options — same card chrome, picture instead of statement */
+.ab-figure { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.ab-img {
+  width: 100%; height: 260px; object-fit: cover;
+  border-radius: 8px; background: var(--color-surface-recessed);
+  display: block; user-select: none;
+}
+.ab-caption {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: var(--letterspace-small); color: var(--color-text-muted);
+}
+.ab-caption-artist { color: var(--color-text-faint); }
+
 .ab-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 24px; gap: 12px; }
 .ab-divider .line { width: 1px; flex: 1; background: var(--color-border); }
 .ab-divider .or { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: var(--letterspace-small); color: var(--color-text-faint); }

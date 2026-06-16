@@ -183,6 +183,9 @@ export interface GeneratedPairLine {
   content_type: ContentType;
   option_a: string;
   option_b: string;
+  /** Optional per-option metadata (image alt/artist/title, source span, …). */
+  a_meta?: Record<string, unknown> | null;
+  b_meta?: Record<string, unknown> | null;
   axis: string | null;
   /** 0..1 model confidence this is a clean, meaningful contrast. */
   strength?: number | null;

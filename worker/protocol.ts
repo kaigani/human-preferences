@@ -74,12 +74,12 @@ const upsertSeed = db.prepare(`
 const insertPair = db.prepare(`
   INSERT OR IGNORE INTO pairs
     (id, schema_version, seed_id, theme_id, context, content_type,
-     option_a, option_b, generator_provider, generator_model,
+     option_a, option_b, a_meta_json, b_meta_json, generator_provider, generator_model,
      generator_prompt_id, generation_strength, axis, content_hash,
      status, embedding, flagged_reason)
   VALUES
     (@id, 1, @seed_id, @theme_id, @context, @content_type,
-     @option_a, @option_b, @provider, @model,
+     @option_a, @option_b, @a_meta_json, @b_meta_json, @provider, @model,
      @prompt_id, @strength, @axis, @content_hash,
      @status, @embedding, @flagged_reason)
 `);
@@ -188,6 +188,8 @@ export const ingestPairs = db.transaction(
         content_type: line.content_type ?? 'text',
         option_a: line.option_a,
         option_b: line.option_b,
+        a_meta_json: line.a_meta ? JSON.stringify(line.a_meta) : null,
+        b_meta_json: line.b_meta ? JSON.stringify(line.b_meta) : null,
         provider: line.provider,
         model: line.model,
         prompt_id: line.prompt_id,

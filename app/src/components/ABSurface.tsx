@@ -12,6 +12,33 @@ function Statement({ text }: { text: string }) {
   );
 }
 
+/** Render an option by content type — a statement, or an image with caption. */
+function OptionContent({
+  type,
+  option,
+}: {
+  type: PairForJudging['content_type'];
+  option: { content: string; meta?: Record<string, unknown> };
+}) {
+  if (type === 'image_ref') {
+    const m = option.meta ?? {};
+    const title = (m.title as string) ?? '';
+    const artist = (m.artist as string) ?? '';
+    return (
+      <figure className="ab-figure">
+        <img className="ab-img" src={option.content} alt={(m.alt as string) ?? title} loading="lazy" draggable={false} />
+        {(title || artist) && (
+          <figcaption className="ab-caption">
+            {title}
+            {artist && <span className="ab-caption-artist"> · {artist}</span>}
+          </figcaption>
+        )}
+      </figure>
+    );
+  }
+  return <Statement text={option.content} />;
+}
+
 interface Props {
   pair: PairForJudging | null;
   onSubmit: (choice: Choice, note?: string) => Promise<void>;
@@ -80,7 +107,7 @@ export function ABSurface({ pair, onSubmit, loading }: Props) {
               <span className="pick-label">Option A</span>
               <span className="pick-kbd">A</span>
             </div>
-            <Statement text={pair.options.a.content} />
+            <OptionContent type={pair.content_type} option={pair.options.a} />
           </div>
 
           <div className="ab-divider">
@@ -94,7 +121,7 @@ export function ABSurface({ pair, onSubmit, loading }: Props) {
               <span className="pick-label">Option B</span>
               <span className="pick-kbd">B</span>
             </div>
-            <Statement text={pair.options.b.content} />
+            <OptionContent type={pair.content_type} option={pair.options.b} />
           </div>
         </div>
       </div>
