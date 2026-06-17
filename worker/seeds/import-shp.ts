@@ -92,7 +92,13 @@ async function totalRows(): Promise<number> {
 
   let imported = 0;
   for (const off of offsets) {
-    const rows = await fetchPage(off, PAGE);
+    let rows: any[];
+    try {
+      rows = await fetchPage(off, PAGE);
+    } catch (e) {
+      process.stdout.write(`  offset ${off}: fetch failed (${(e as Error).message.slice(0, 40)}), skipping\n`);
+      continue;
+    }
     if (!rows.length) continue;
     const { seeds } = ingestPage(rows);
     imported += seeds;
