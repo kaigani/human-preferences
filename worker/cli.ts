@@ -77,7 +77,7 @@ switch (cmd) {
       source_type: source,
       provider: (f.provider as JobSpec['provider']) ?? 'ollama',
       model: f.model ?? 'gemma2',
-      prompt_id: f['prompt-id'] ?? (source === 'shp' ? 'opinion_stance_v1' : 'stance_contrast_v1'),
+      prompt_id: f['prompt-id'] ?? (source === 'shp' ? 'opinion_stance_v2' : 'stance_contrast_v1'),
       pairs_per_seed: pairsPerSeed,
       requested_count: seeds.length * pairsPerSeed,
       notes: f.notes,

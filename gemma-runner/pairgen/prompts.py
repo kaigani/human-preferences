@@ -93,9 +93,32 @@ academic roles (construction, nursing, kitchens, farms, shops, trucking, classro
 Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","strength":0.8}}]}}
 """
 
+OPINION_STANCE_V2 = """\
+Below is a real post from an online community ({theme_label}). Use it as raw
+material to put a reader INSIDE the situation and elicit their PERSONAL VALUES —
+not the "correct" answer.
+
+POST:
+{context}
+
+Produce {n} distinct A/B preference pairs provoked by this post. For EACH pair:
+- "context": a vivid SECOND-PERSON setup that drops the reader into the dilemma the
+  post raises — "You're a [role/person] and [the concrete situation]. [the question
+  you face]." Make them feel the stake. Do NOT write an abstract "whether X is worth
+  Y" proposition, and do not quote the post.
+- "option_a"/"option_b": two opposed, each-defensible choices the person in that
+  situation could make, in a confident first-person or imperative voice. Both
+  reasonable; no strawman. These reveal values, not facts.
+- "axis": 2-5 words naming the values contrast.
+- "strength": 0..1 confidence this is a genuine values contrast (not factual right/wrong).
+
+Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","strength":0.8}}]}}
+"""
+
 WRITERS = {
     "stance_contrast_v1": WRITER_TEMPLATE_V1,
     "opinion_stance_v1": OPINION_STANCE_V1,
+    "opinion_stance_v2": OPINION_STANCE_V2,
     "narrative_pick_v1": NARRATIVE_PICK_V1,
     "role_play_v1": ROLE_PLAY_V1,
 }
