@@ -24,7 +24,7 @@ export function App() {
             <Route path="/" element={<Dashboard name={name} />} />
             <Route path="/judge" element={<Judge />} />
             <Route path="/themes" element={<Themes />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<Profile name={name} onNameSaved={setName} />} />
           </Routes>
         </main>
         <Rail />

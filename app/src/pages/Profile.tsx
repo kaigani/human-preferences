@@ -4,12 +4,26 @@ import { api } from '../api';
 import { TIERS } from '@shared/regions';
 import type { RobustnessSummary } from '@shared/types';
 
-export function Profile() {
+export function Profile({ name, onNameSaved }: { name: string; onNameSaved: (n: string) => void }) {
   const [rob, setRob] = useState<RobustnessSummary | null>(null);
+  const [draft, setDraft] = useState(name);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     api.robustness().then(setRob).catch(() => {});
   }, []);
+  useEffect(() => {
+    setDraft(name);
+  }, [name]);
+
+  async function saveName() {
+    const n = draft.trim();
+    if (!n || n === name) return;
+    const result = await api.setMe(n);
+    onNameSaved(result);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1600);
+  }
 
   const judged = rob?.total_judged ?? 0;
 
@@ -19,6 +33,25 @@ export function Profile() {
       <h1 className="welcome serif" style={{ fontSize: 44, fontWeight: 300, margin: '10px 0 28px' }}>
         How robust<br />is <span className="italic">you?</span>
       </h1>
+
+      {/* name — local only, never exported */}
+      <div className="name-edit">
+        <span className="eyebrow">Your name</span>
+        <div className="name-edit-row">
+          <input
+            className="name-input"
+            value={draft}
+            maxLength={40}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && saveName()}
+            placeholder="Friend"
+          />
+          <button className="text-link" onClick={saveName} disabled={!draft.trim() || draft.trim() === name}>
+            {saved ? 'Saved ✓' : 'Save'}
+          </button>
+          <span className="name-note">stored locally · never in any export</span>
+        </div>
+      </div>
 
       {/* robustness headline + breakdown */}
       <div className="stat-grid">

@@ -382,6 +382,18 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .st-calibrated { color: var(--color-text-primary); font-weight: 600; }
 .st-rich { color: var(--color-signal-active); font-weight: 600; }
 
+/* ════════════════ Name editor ════════════════ */
+.name-edit { margin: 0 0 36px; }
+.name-edit .eyebrow { display: block; margin-bottom: 10px; }
+.name-edit-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.name-input {
+  font-family: var(--serif); font-size: 22px; font-weight: 300; color: var(--color-text-primary);
+  background: transparent; border: none; border-bottom: 1px solid var(--color-border);
+  padding: 6px 2px; min-width: 220px;
+}
+.name-input:focus { outline: none; border-bottom-color: var(--color-signal-active); box-shadow: 0 1px 0 var(--color-signal-active); }
+.name-note { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: var(--letterspace-small); color: var(--color-text-faint); }
+
 /* ════════════════ Tier ladder ════════════════ */
 .ladder { margin-top: 4px; }
 .tier-row {

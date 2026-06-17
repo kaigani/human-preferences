@@ -14,6 +14,19 @@ import type {
 
 const db = getDb();
 
+// ── local key/value (display name, etc.) — never exported ──
+const getMetaStmt = db.prepare(`SELECT value FROM meta WHERE key = ?`);
+const setMetaStmt = db.prepare(
+  `INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+);
+export function getMeta(key: string): string | null {
+  const row = getMetaStmt.get(key) as { value: string } | undefined;
+  return row?.value ?? null;
+}
+export function setMeta(key: string, value: string): void {
+  setMetaStmt.run(key, value);
+}
+
 function parseMeta(json: string | null): Record<string, unknown> | undefined {
   if (!json) return undefined;
   try {

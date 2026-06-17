@@ -21,6 +21,8 @@ async function http<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   me: () => http<{ display_name: string }>('/api/me'),
+  setMe: (display_name: string) =>
+    http<{ display_name: string }>('/api/me', { method: 'POST', body: JSON.stringify({ display_name }) }).then((r) => r.display_name),
   stats: () => http<StatsSummary>('/api/stats'),
   robustness: () => http<RobustnessSummary>('/api/profile/robustness'),
   nextSet: (size = 20) => http<{ pairs: PairForJudging[] }>(`/api/sets/next?size=${size}`).then((r) => r.pairs),

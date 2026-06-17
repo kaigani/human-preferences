@@ -5,12 +5,14 @@ import {
   createSession,
   endSession,
   getFeed,
+  getMeta,
   getNextPairs,
   getSet,
   getStats,
   listThemes,
   queuedRemaining,
   recordJudgment,
+  setMeta,
 } from './repo.js';
 import { getRobustness } from './robustness.js';
 import { buildDpoJsonl, buildRecords, buildRubric } from '../export/build.js';
@@ -22,12 +24,22 @@ migrate(getDb());
 const app = Fastify({ logger: true });
 
 const PORT = Number(process.env.PORT ?? 8787);
-const USER_DISPLAY_NAME = process.env.USER_DISPLAY_NAME ?? 'Friend';
 const VALID_CHOICES: Choice[] = ['a', 'b', 'skip', 'no_preference'];
+
+// display name: local meta override → env default → 'Friend'. Local-only, never exported.
+const displayName = () => getMeta('display_name') ?? process.env.USER_DISPLAY_NAME ?? 'Friend';
 
 app.get('/api/health', async () => ({ ok: true }));
 
-app.get('/api/me', async () => ({ display_name: USER_DISPLAY_NAME }));
+app.get('/api/me', async () => ({ display_name: displayName() }));
+
+app.post('/api/me', async (req, reply) => {
+  const body = (req.body ?? {}) as { display_name?: string };
+  const name = (body.display_name ?? '').trim().slice(0, 40);
+  if (!name) return reply.code(400).send({ error: 'display_name required' });
+  setMeta('display_name', name);
+  return { display_name: name };
+});
 
 // ── sessions ──
 app.post('/api/sessions', async (req) => {
@@ -98,7 +110,7 @@ app.get('/api/export/records', async (_req, reply) => {
 });
 
 app.get('/api/export/rubric', async (_req, reply) => {
-  const { markdown } = buildRubric(USER_DISPLAY_NAME);
+  const { markdown } = buildRubric(displayName());
   return reply
     .header('content-type', 'text/markdown')
     .header('content-disposition', 'attachment; filename="taste-rubric.md"')
