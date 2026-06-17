@@ -10,6 +10,7 @@ export function useJudgeQueue(theme?: string) {
   const [queue, setQueue] = useState<PairForJudging[]>([]);
   const [loading, setLoading] = useState(true);
   const [judgedCount, setJudgedCount] = useState(0);
+  const [remaining, setRemaining] = useState(0);
   const shownAt = useRef<number>(Date.now());
   const fetching = useRef(false);
 
@@ -34,7 +35,8 @@ export function useJudgeQueue(theme?: string) {
     setLoading(true);
     fetching.current = false;
     refill();
-  }, [refill]);
+    api.queueCount(theme).then(setRemaining).catch(() => {});
+  }, [refill, theme]);
 
   useEffect(() => {
     shownAt.current = Date.now();
@@ -46,14 +48,16 @@ export function useJudgeQueue(theme?: string) {
       if (!current) return;
       const latency_ms = Date.now() - shownAt.current;
       const session_id = await getSessionId();
-      // optimistic advance
+      // optimistic advance — every judgment (incl. skip) leaves the queue
       setQueue((q) => q.slice(1));
+      setRemaining((n) => Math.max(0, n - 1));
       if (choice !== 'skip') setJudgedCount((n) => n + 1);
       try {
         await api.judge({ pair_id: current.id, session_id, choice, note: note || null, latency_ms });
       } catch (err) {
         // re-queue on failure
         setQueue((q) => [current, ...q]);
+        setRemaining((n) => n + 1);
         if (choice !== 'skip') setJudgedCount((n) => Math.max(0, n - 1));
         throw err;
       }
@@ -65,5 +69,5 @@ export function useJudgeQueue(theme?: string) {
     if (!loading && queue.length <= REFILL_AT) refill();
   }, [queue.length, loading, refill]);
 
-  return { current: queue[0] ?? null, upcoming: queue.length, loading, submit, judgedCount };
+  return { current: queue[0] ?? null, remaining, loading, submit, judgedCount };
 }

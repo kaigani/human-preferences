@@ -84,6 +84,15 @@ export function getNextPairs(limit = 10, themeId?: string): PairForJudging[] {
   return rows.map(rowToPair);
 }
 
+const countQueuedAll = db.prepare(`SELECT COUNT(*) AS n FROM pairs WHERE status='queued'`);
+const countQueuedTheme = db.prepare(`SELECT COUNT(*) AS n FROM pairs WHERE status='queued' AND theme_id = ?`);
+
+/** True remaining queued count (optionally for one theme). */
+export function queuedRemaining(themeId?: string): number {
+  const row = (themeId ? countQueuedTheme.get(themeId) : countQueuedAll.get()) as { n: number };
+  return row.n;
+}
+
 // Pool of queued pairs to assemble region-spanning sets from.
 const selectPool = db.prepare(`
   SELECT p.id, p.context, p.content_type, p.option_a, p.option_b,

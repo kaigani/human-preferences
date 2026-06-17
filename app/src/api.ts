@@ -29,6 +29,8 @@ export const api = {
     http<{ pairs: PairForJudging[] }>(
       `/api/queue/next?count=${count}${theme ? `&theme=${encodeURIComponent(theme)}` : ''}`,
     ).then((r) => r.pairs),
+  queueCount: (theme?: string) =>
+    http<{ count: number }>(`/api/queue/count${theme ? `?theme=${encodeURIComponent(theme)}` : ''}`).then((r) => r.count),
   createSession: () =>
     http<Session>('/api/sessions', { method: 'POST', body: JSON.stringify({ device_label: navigator.platform }) }),
   judge: (input: JudgmentInput) =>

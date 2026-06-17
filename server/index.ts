@@ -9,6 +9,7 @@ import {
   getSet,
   getStats,
   listThemes,
+  queuedRemaining,
   recordJudgment,
 } from './repo.js';
 import { getRobustness } from './robustness.js';
@@ -45,6 +46,10 @@ app.get<{ Querystring: { theme?: string; count?: string } }>('/api/queue/next', 
   const pairs = getNextPairs(count, req.query.theme);
   return { pairs };
 });
+
+app.get<{ Querystring: { theme?: string } }>('/api/queue/count', async (req) => ({
+  count: queuedRemaining(req.query.theme),
+}));
 
 // ── judgments ──
 app.post('/api/judgments', async (req, reply) => {

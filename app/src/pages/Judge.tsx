@@ -6,7 +6,7 @@ import { useJudgeQueue } from '../useJudgeQueue';
 export function Judge() {
   const [params] = useSearchParams();
   const theme = params.get('theme') ?? undefined;
-  const { current, submit, loading, judgedCount, upcoming } = useJudgeQueue(theme);
+  const { current, submit, loading, judgedCount, remaining } = useJudgeQueue(theme);
 
   const title = useMemo(() => (theme ? theme[0].toUpperCase() + theme.slice(1) : 'All themes'), [theme]);
 
@@ -22,7 +22,7 @@ export function Judge() {
         <div className="journey">
           <div className="eyebrow">This session</div>
           <div className="journey-count serif">{judgedCount}</div>
-          <div className="journey-sub">{upcoming} QUEUED</div>
+          <div className="journey-sub">{remaining.toLocaleString()} QUEUED</div>
         </div>
       </div>
 
