@@ -12,6 +12,9 @@ data/                 # SQLite DB: seeds, generated pairs, judgments, notes
 # Exports — your DPO dataset + synthesized taste profile / rubric
 exports/
 *.jsonl
+# but the curated starter content ships with the tool:
+!seed-data/
+!seed-data/*.jsonl
 rubric*.txt
 rubric*.md
 

@@ -65,7 +65,9 @@ The dashboard is a progression frame, not a flat queue (`shared/regions.ts` + `s
 - **Streaks:** consecutive judging days (computed from `judgments.created_at`), shown on the dashboard + session summary.
 
 ### Region content sources
-- **Narrative** (film/tv/books/music/games, kind `narrative`): Claude-authored "which would you rather" pairs (see /tmp pattern), or the `narrative_pick_v1` runner prompt for bulk. Themes: `film`/`television`/`books`/`music`/`games`.
+- **Curated starter content** ships in `seed-data/*.jsonl` → `npm run seed:content` creates the themes and ingests Narrative + Work-&-roles pairs (idempotent).
+- **Narrative** (film/tv/books/music/games, kind `narrative`): "which would you rather" pairs; `narrative_pick_v1` runner prompt for bulk.
+- **Work & roles** (kind `roleplay` → `work` region): second-person situational role-play across a deliberate range of professions (trades/care/service/field/enterprise), countering SHP's Reddit/academia skew. `role_play_v1` runner prompt for bulk. Frame: "You're a [role]. [a call] —" then two defensible choices.
 - **Visual** (kind `visual`): `npm run fetch:images` downloads CC0 art from the Art Institute of Chicago into `app/public/images/` (web-sized, bundled in repo so the set is identical for everyone); `npm run import:images` pairs them within category as `content_type:image_ref`. The Judge view renders images in the same A/B card chrome.
 - **Consistency (future):** currently decisiveness; the planned re-test calibration (re-ask a paraphrase, measure flip-rate) would make it a true reliability signal.
 

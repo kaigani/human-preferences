@@ -73,10 +73,31 @@ Produce {n} distinct pairs. For EACH pair:
 Return ONLY JSON: {{"pairs": [{{"context": "...", "option_a": "...", "option_b": "...", "axis": "...", "strength": 0.8}}]}}
 """
 
+ROLE_PLAY_V1 = """\
+You generate situational ROLE-PLAY preference pairs that reveal personal values.
+
+ROLE / SITUATION SEED: {context}
+CONTRAST HINT (optional): {axis_hint}
+
+Produce {n} distinct pairs. For EACH pair:
+- "context": a vivid SECOND-PERSON setup — "You're a [role]. [a specific call you must make]."
+  Put the reader inside the role with a concrete stake. Vary the situation across the {n} pairs.
+- "option_a"/"option_b": two choices the person could make, each genuinely defensible, revealing
+  values (loyalty vs standards, mercy vs rules, speed vs care, the person vs the numbers…). No strawman.
+- "axis": 2-5 words naming the values contrast.
+- "strength": 0..1.
+
+Span a REAL RANGE of professions — trades, care, service, field, enterprise, not just office or
+academic roles (construction, nursing, kitchens, farms, shops, trucking, classrooms…).
+
+Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","strength":0.8}}]}}
+"""
+
 WRITERS = {
     "stance_contrast_v1": WRITER_TEMPLATE_V1,
     "opinion_stance_v1": OPINION_STANCE_V1,
     "narrative_pick_v1": NARRATIVE_PICK_V1,
+    "role_play_v1": ROLE_PLAY_V1,
 }
 
 

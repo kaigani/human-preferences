@@ -10,6 +10,7 @@ export interface Region {
 export const REGIONS: Region[] = [
   { id: 'ideas', label: 'Ideas & opinion' },
   { id: 'living', label: 'Daily life' },
+  { id: 'work', label: 'Work & roles' },
   { id: 'power', label: 'Power & society' },
   { id: 'culture', label: 'Culture & meaning' },
   { id: 'narrative', label: 'Narrative' },
@@ -26,6 +27,7 @@ const SHP_LIVING = new Set([
 export function regionForTheme(themeId: string | null, kind: string | null): string {
   if (!themeId) return 'ideas';
   if (kind === 'current_events' || themeId === 'current-events') return 'now';
+  if (kind === 'roleplay') return 'work';
   if (kind === 'narrative') return 'narrative';
   if (kind === 'visual') return 'visual';
   if (themeId === 'living') return 'living';
