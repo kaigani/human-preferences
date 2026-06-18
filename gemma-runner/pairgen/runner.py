@@ -92,6 +92,7 @@ def _generate_for_seed(cfg: AppConfig, job: dict, seed: dict, *, mock: bool, sho
             "option_a": p["option_a"],
             "option_b": p["option_b"],
             "axis": p.get("axis"),
+            "tags": p.get("tags") if isinstance(p.get("tags"), list) else None,
             "strength": p.get("strength"),
             "provider": "ollama",
             "model": cfg.provider.writer_model if not mock else "mock",

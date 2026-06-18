@@ -194,6 +194,8 @@ export interface GeneratedPairLine {
   prompt_id: string | null;
   /** Optional embedding vector (computed by the runner) for semantic dedup. */
   embedding?: number[] | null;
+  /** Optional tags (e.g. moral-foundation labels) linked to the pair. */
+  tags?: string[];
 }
 
 /** COMPLETE.json — written by the runner when a job finishes. */

@@ -115,6 +115,11 @@ function nearest(vec: number[], pool: Array<{ id: string; vec: number[] }>): { i
   }
   return best;
 }
+const upsertTag = db.prepare(`INSERT OR IGNORE INTO tags (id, label) VALUES (?, ?)`);
+const linkTag = db.prepare(
+  `INSERT OR IGNORE INTO entity_tags (tag_id, entity_type, entity_id) VALUES (?, 'pair', ?)`,
+);
+
 const recordJob = db.prepare(`
   INSERT INTO generation_jobs
     (id, status, provider, model, source_type, params_json, requested_count, produced_count, finished_at)
@@ -203,6 +208,10 @@ export const ingestPairs = db.transaction(
 
       if (info.changes) {
         inserted += 1;
+        for (const t of line.tags ?? []) {
+          upsertTag.run(t, t);
+          linkTag.run(t, id);
+        }
         if (status === 'flagged') {
           flagged += 1;
         } else if (vec && vec.length) {

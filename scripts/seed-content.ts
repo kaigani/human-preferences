@@ -17,6 +17,7 @@ const themes: Array<[string, string, string, string, number]> = [
   ['music', 'Music', 'narrative', 'Which would you rather listen to?', 13],
   ['games', 'Games', 'narrative', 'Which world would you rather enter?', 14],
   ['work-roles', 'Work & roles', 'roleplay', 'You are in a role, facing a call. What do you do?', 6],
+  ['morality', 'Right & wrong', 'moral', 'Two values collide. Which wins for you?', 7],
 ];
 const upsertTheme = db.prepare(
   `INSERT OR IGNORE INTO themes (id,label,kind,description,sort_order) VALUES (?,?,?,?,?)`,
@@ -34,4 +35,5 @@ function ingest(file: string): number {
 
 const nr = ingest('narrative.jsonl');
 const rp = ingest('roleplay.jsonl');
-console.log(`✓ Seeded curated content: ${nr} narrative + ${rp} role-play pair(s).`);
+const mr = ingest('morality.jsonl');
+console.log(`✓ Seeded curated content: ${nr} narrative + ${rp} role-play + ${mr} morality pair(s).`);

@@ -115,12 +115,34 @@ Produce {n} distinct A/B preference pairs provoked by this post. For EACH pair:
 Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","strength":0.8}}]}}
 """
 
+MORAL_TRADEOFF_V1 = """\
+You generate MORAL-TRADEOFF preference pairs based on Moral Foundations Theory.
+The six foundations are: care, fairness, loyalty, authority, purity, liberty.
+
+SEED / CONTRAST HINT: {context} {axis_hint}
+
+Produce {n} distinct pairs that pit TWO different foundations against each other
+(e.g. care vs loyalty, fairness vs authority, liberty vs purity). For EACH pair:
+- "context": a vivid SECOND-PERSON dilemma where the two foundations genuinely
+  collide — "You ... and ...". Concrete, no profession required, no obvious right answer.
+- "option_a": the choice that honors the FIRST foundation in the axis.
+- "option_b": the choice that honors the SECOND foundation. Each must be sincerely
+  defensible; no strawman. This reveals which foundation the reader weights more.
+- "axis": "<foundation_a> vs <foundation_b>" using the foundation words above.
+- "tags": ["<foundation_a>", "<foundation_b>"] — the two foundations, lowercase.
+- "strength": 0..1.
+
+Vary the foundation collisions widely across the {n} pairs so coverage is balanced.
+Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","tags":["care","loyalty"],"strength":0.8}}]}}
+"""
+
 WRITERS = {
     "stance_contrast_v1": WRITER_TEMPLATE_V1,
     "opinion_stance_v1": OPINION_STANCE_V1,
     "opinion_stance_v2": OPINION_STANCE_V2,
     "narrative_pick_v1": NARRATIVE_PICK_V1,
     "role_play_v1": ROLE_PLAY_V1,
+    "moral_tradeoff_v1": MORAL_TRADEOFF_V1,
 }
 
 
