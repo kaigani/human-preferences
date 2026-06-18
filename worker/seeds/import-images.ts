@@ -25,6 +25,9 @@ const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8')) as Item[];
 // one Visual theme per category (kind 'visual' → Visual region)
 const CATEGORY_LABEL: Record<string, string> = {
   painting: 'Painting', photograph: 'Photography', print: 'Prints', drawing: 'Drawings',
+  architecture: 'Architecture', landscape: 'Landscape', street: 'Street', portrait: 'Portrait',
+  minimal: 'Minimalism', abstract: 'Abstract', interior: 'Interiors', food: 'Food',
+  wildlife: 'Wildlife', 'still-life': 'Still life',
 };
 const upsertTheme = db.prepare(`INSERT OR IGNORE INTO themes (id, label, kind, description, sort_order) VALUES (?, ?, 'visual', ?, ?)`);
 
