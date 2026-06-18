@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { getDb, migrate } from '../server/db.js';
 import { themeSeeds } from './seeds/themes.js';
 import { selectShpSeeds } from './seeds/select-shp.js';
+import { promptSeeds } from './seeds/prompt-seeds.js';
 import {
   DEDUP_THRESHOLD,
   SHARED_DIR,
@@ -52,7 +53,7 @@ function ingestFromFile(path: string, jobId: string) {
 
 switch (cmd) {
   case 'export-job': {
-    const source = (f.source ?? 'theme') as 'theme' | 'shp';
+    const source = (f.source ?? 'theme') as 'theme' | 'shp' | 'prompt';
     const pairsPerSeed = Number(f['pairs-per-seed'] ?? (source === 'shp' ? 2 : 5));
     const seedCount = Number(f.seeds ?? 20);
 
@@ -66,15 +67,21 @@ switch (cmd) {
       seeds = selectShpSeeds(seedCount, pairsPerSeed, f.theme);
       if (!seeds.length) throw new Error('no unused SHP seeds — run `npm run import:shp -- --spread --limit 2000` first');
       jobLabel = f.theme ? `shp-${f.theme.replace('shp:', '')}` : 'shp';
+    } else if (source === 'prompt') {
+      if (!f.theme) throw new Error('--source prompt requires --theme <id>');
+      if (!f['prompt-id']) throw new Error('--source prompt requires --prompt-id <id>');
+      const axes = (f.axes ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+      seeds = promptSeeds(f.theme, seedCount, pairsPerSeed, axes);
+      jobLabel = f.theme;
     } else {
-      throw new Error(`unknown --source ${source} (use theme | shp)`);
+      throw new Error(`unknown --source ${source} (use theme | shp | prompt)`);
     }
 
     const job_id = newJobId(jobLabel);
     const spec: JobSpec = {
       job_id,
       created_at: new Date().toISOString(),
-      source_type: source,
+      source_type: source === 'prompt' ? 'theme' : source,
       provider: (f.provider as JobSpec['provider']) ?? 'ollama',
       model: f.model ?? 'gemma2',
       prompt_id: f['prompt-id'] ?? (source === 'shp' ? 'opinion_stance_v2' : 'stance_contrast_v1'),
