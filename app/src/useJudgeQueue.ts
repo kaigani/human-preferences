@@ -6,7 +6,8 @@ import type { Choice, PairForJudging } from '@shared/types';
 const PREFETCH = 12;
 const REFILL_AT = 4;
 
-export function useJudgeQueue(theme?: string) {
+export function useJudgeQueue(sel: { theme?: string; region?: string } = {}) {
+  const { theme, region } = sel;
   const [queue, setQueue] = useState<PairForJudging[]>([]);
   const [loading, setLoading] = useState(true);
   const [judgedCount, setJudgedCount] = useState(0);
@@ -18,7 +19,7 @@ export function useJudgeQueue(theme?: string) {
     if (fetching.current) return;
     fetching.current = true;
     try {
-      const pairs = await api.nextPairs(PREFETCH, theme);
+      const pairs = await api.nextPairs(PREFETCH, { theme, region });
       setQueue((q) => {
         const seen = new Set(q.map((p) => p.id));
         return [...q, ...pairs.filter((p) => !seen.has(p.id))];
@@ -27,7 +28,7 @@ export function useJudgeQueue(theme?: string) {
       fetching.current = false;
       setLoading(false);
     }
-  }, [theme]);
+  }, [theme, region]);
 
   // reset when theme changes
   useEffect(() => {
@@ -35,8 +36,8 @@ export function useJudgeQueue(theme?: string) {
     setLoading(true);
     fetching.current = false;
     refill();
-    api.queueCount(theme).then(setRemaining).catch(() => {});
-  }, [refill, theme]);
+    api.queueCount({ theme, region }).then(setRemaining).catch(() => {});
+  }, [refill, theme, region]);
 
   useEffect(() => {
     shownAt.current = Date.now();

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface FeedItem {
   id: string;
@@ -15,6 +16,7 @@ interface FeedItem {
  */
 export function Rail() {
   const [items, setItems] = useState<FeedItem[] | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/api/events/feed')
@@ -31,7 +33,13 @@ export function Rail() {
       {items && items.length > 0 ? (
         <div className="feed">
           {items.map((it) => (
-            <div className="feed-item" key={it.id}>
+            <div
+              className="feed-item is-clickable"
+              key={it.id}
+              onClick={() => navigate('/judge?region=now')}
+              role="button"
+              tabIndex={0}
+            >
               <div className="feed-thumb" style={it.thumb ? { backgroundImage: `url(${it.thumb})` } : undefined} />
               <div>
                 <div className="f-title">{it.title}</div>

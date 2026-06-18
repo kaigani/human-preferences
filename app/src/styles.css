@@ -317,6 +317,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .feed { display: flex; flex-direction: column; }
 .feed-item { display: grid; grid-template-columns: 14px 1fr; gap: 13px; padding: 15px 0; border-top: 1px solid var(--color-border-soft); }
 .feed-item:first-child { border-top: none; }
+.feed-item.is-clickable { cursor: pointer; transition: background .15s, padding .15s; }
+.feed-item.is-clickable:hover { background: var(--color-hover-bg); margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 7px; }
+.feed-item.is-clickable:hover .f-title { color: var(--color-text-primary); }
 /* live marker — yellow tick */
 .feed-thumb { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--color-signal); box-shadow: 0 0 8px var(--color-signal-glow); }
 .feed-item .f-title { font-size: 13px; line-height: 1.45; font-weight: 500; color: var(--color-text-primary); }

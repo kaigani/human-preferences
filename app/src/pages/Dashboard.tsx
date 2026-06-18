@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ProgressRing } from '../components/ProgressRing';
 import { ABSurface } from '../components/ABSurface';
@@ -11,6 +12,7 @@ import type { RobustnessSummary } from '@shared/types';
 export function Dashboard({ name }: { name: string }) {
   const [rob, setRob] = useState<RobustnessSummary | null>(null);
   const session = useSession(20);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.robustness().then(setRob).catch(() => {});
@@ -89,7 +91,7 @@ export function Dashboard({ name }: { name: string }) {
           {tier?.next ? `unlocks ${tier.unlocks}` : tier?.unlocks}
         </span>
       </div>
-      <TasteLedger regions={regions} />
+      <TasteLedger regions={regions} onPick={(id) => navigate(`/judge?region=${id}`)} />
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, margin: '40px 0 8px' }}>
         <span className="big-counter mono">{robust}%</span>

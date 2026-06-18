@@ -92,17 +92,53 @@ function rowToPair(r: any): PairForJudging {
   };
 }
 
-export function getNextPairs(limit = 10, themeId?: string): PairForJudging[] {
-  const rows = (themeId ? selectQueueByTheme.all(themeId, limit) : selectQueueAll.all(limit)) as any[];
+const allThemeKinds = db.prepare(`SELECT id, kind FROM themes`);
+/** The theme ids that belong to a region. */
+function regionThemeIds(region: string): string[] {
+  return (allThemeKinds.all() as { id: string; kind: string }[])
+    .filter((t) => regionForTheme(t.id, t.kind) === region)
+    .map((t) => t.id);
+}
+
+const QUEUE_COLS = `p.id, p.context, p.content_type, p.option_a, p.option_b,
+  p.a_meta_json, p.b_meta_json, p.axis,
+  t.id AS theme_id, t.label AS theme_label, t.kind AS theme_kind`;
+
+export interface QueueSelector {
+  theme?: string;
+  region?: string;
+}
+
+export function getNextPairs(limit = 10, sel: QueueSelector = {}): PairForJudging[] {
+  if (sel.region) {
+    const ids = regionThemeIds(sel.region);
+    if (!ids.length) return [];
+    const ph = ids.map(() => '?').join(',');
+    const rows = db
+      .prepare(
+        `SELECT ${QUEUE_COLS} FROM pairs p LEFT JOIN themes t ON t.id = p.theme_id
+         WHERE p.status='queued' AND p.theme_id IN (${ph})
+         ORDER BY p.created_at LIMIT ?`,
+      )
+      .all(...ids, limit) as any[];
+    return rows.map(rowToPair);
+  }
+  const rows = (sel.theme ? selectQueueByTheme.all(sel.theme, limit) : selectQueueAll.all(limit)) as any[];
   return rows.map(rowToPair);
 }
 
 const countQueuedAll = db.prepare(`SELECT COUNT(*) AS n FROM pairs WHERE status='queued'`);
 const countQueuedTheme = db.prepare(`SELECT COUNT(*) AS n FROM pairs WHERE status='queued' AND theme_id = ?`);
 
-/** True remaining queued count (optionally for one theme). */
-export function queuedRemaining(themeId?: string): number {
-  const row = (themeId ? countQueuedTheme.get(themeId) : countQueuedAll.get()) as { n: number };
+/** True remaining queued count (optionally for one theme or region). */
+export function queuedRemaining(sel: QueueSelector = {}): number {
+  if (sel.region) {
+    const ids = regionThemeIds(sel.region);
+    if (!ids.length) return 0;
+    const ph = ids.map(() => '?').join(',');
+    return (db.prepare(`SELECT COUNT(*) AS n FROM pairs WHERE status='queued' AND theme_id IN (${ph})`).get(...ids) as { n: number }).n;
+  }
+  const row = (sel.theme ? countQueuedTheme.get(sel.theme) : countQueuedAll.get()) as { n: number };
   return row.n;
 }
 

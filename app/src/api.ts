@@ -7,6 +7,19 @@ import type {
   Theme,
 } from '@shared/types';
 
+export interface QueueSelector {
+  theme?: string;
+  region?: string;
+}
+
+function selQs(sel: QueueSelector | undefined, lead: '?' | '&'): string {
+  const p = new URLSearchParams();
+  if (sel?.theme) p.set('theme', sel.theme);
+  if (sel?.region) p.set('region', sel.region);
+  const s = p.toString();
+  return s ? `${lead}${s}` : '';
+}
+
 async function http<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     headers: { 'content-type': 'application/json' },
@@ -27,12 +40,10 @@ export const api = {
   robustness: () => http<RobustnessSummary>('/api/profile/robustness'),
   nextSet: (size = 20) => http<{ pairs: PairForJudging[] }>(`/api/sets/next?size=${size}`).then((r) => r.pairs),
   themes: () => http<{ themes: Theme[] }>('/api/themes').then((r) => r.themes),
-  nextPairs: (count = 12, theme?: string) =>
-    http<{ pairs: PairForJudging[] }>(
-      `/api/queue/next?count=${count}${theme ? `&theme=${encodeURIComponent(theme)}` : ''}`,
-    ).then((r) => r.pairs),
-  queueCount: (theme?: string) =>
-    http<{ count: number }>(`/api/queue/count${theme ? `?theme=${encodeURIComponent(theme)}` : ''}`).then((r) => r.count),
+  nextPairs: (count = 12, sel?: QueueSelector) =>
+    http<{ pairs: PairForJudging[] }>(`/api/queue/next?count=${count}${selQs(sel, '&')}`).then((r) => r.pairs),
+  queueCount: (sel?: QueueSelector) =>
+    http<{ count: number }>(`/api/queue/count${selQs(sel, '?')}`).then((r) => r.count),
   createSession: () =>
     http<Session>('/api/sessions', { method: 'POST', body: JSON.stringify({ device_label: navigator.platform }) }),
   judge: (input: JudgmentInput) =>

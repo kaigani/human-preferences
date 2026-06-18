@@ -2,13 +2,19 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ABSurface } from '../components/ABSurface';
 import { useJudgeQueue } from '../useJudgeQueue';
+import { REGIONS } from '@shared/regions';
 
 export function Judge() {
   const [params] = useSearchParams();
   const theme = params.get('theme') ?? undefined;
-  const { current, submit, loading, judgedCount, remaining } = useJudgeQueue(theme);
+  const region = params.get('region') ?? undefined;
+  const { current, submit, loading, judgedCount, remaining } = useJudgeQueue({ theme, region });
 
-  const title = useMemo(() => (theme ? theme[0].toUpperCase() + theme.slice(1) : 'All themes'), [theme]);
+  const title = useMemo(() => {
+    if (region) return REGIONS.find((r) => r.id === region)?.label ?? region;
+    if (theme) return theme[0].toUpperCase() + theme.slice(1);
+    return 'All themes';
+  }, [theme, region]);
 
   return (
     <div>

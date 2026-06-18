@@ -53,14 +53,14 @@ app.post<{ Params: { id: string } }>('/api/sessions/:id/end', async (req) => {
 });
 
 // ── judge queue ──
-app.get<{ Querystring: { theme?: string; count?: string } }>('/api/queue/next', async (req) => {
+app.get<{ Querystring: { theme?: string; region?: string; count?: string } }>('/api/queue/next', async (req) => {
   const count = Math.min(50, Math.max(1, Number(req.query.count ?? 10) || 10));
-  const pairs = getNextPairs(count, req.query.theme);
+  const pairs = getNextPairs(count, { theme: req.query.theme, region: req.query.region });
   return { pairs };
 });
 
-app.get<{ Querystring: { theme?: string } }>('/api/queue/count', async (req) => ({
-  count: queuedRemaining(req.query.theme),
+app.get<{ Querystring: { theme?: string; region?: string } }>('/api/queue/count', async (req) => ({
+  count: queuedRemaining({ theme: req.query.theme, region: req.query.region }),
 }));
 
 // ── judgments ──
