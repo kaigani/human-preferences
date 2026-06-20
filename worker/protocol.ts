@@ -132,6 +132,16 @@ function kindForSource(source: SourceType): ThemeKind {
   return 'custom';
 }
 
+const FOUNDATIONS = new Set(['care', 'fairness', 'loyalty', 'authority', 'purity', 'liberty']);
+/** For morality pairs, derive foundation tags from an "<a> vs <b>" axis if the
+ *  model didn't supply explicit tags. */
+function foundationTags(themeId: string | null, axis: string | null): string[] {
+  if (themeId !== 'morality' || !axis) return [];
+  const parts = axis.toLowerCase().split(/\s+vs\.?\s+/).map((s) => s.trim());
+  const found = parts.filter((p) => FOUNDATIONS.has(p));
+  return found.length === 2 ? found : [];
+}
+
 export interface IngestResult {
   read: number;
   inserted: number;
@@ -208,7 +218,8 @@ export const ingestPairs = db.transaction(
 
       if (info.changes) {
         inserted += 1;
-        for (const t of line.tags ?? []) {
+        const tags = line.tags?.length ? line.tags : foundationTags(line.theme_id, line.axis);
+        for (const t of tags) {
           upsertTag.run(t, t);
           linkTag.run(t, id);
         }
