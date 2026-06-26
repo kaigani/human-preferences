@@ -136,6 +136,45 @@ Vary the foundation collisions widely across the {n} pairs so coverage is balanc
 Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","tags":["care","loyalty"],"strength":0.8}}]}}
 """
 
+IDENTITY_CHOICE_V1 = """\
+You generate SELF-CONCEPT preference pairs for a personal mindfile.
+
+MODE / HINT: {context} {axis_hint}
+
+Produce {n} distinct pairs. Each is a short, evocative either/or about who the
+person IS or wants to BECOME. Three flavors (match the MODE if given, else vary):
+- archetype: "Which is more you?" — two roles/temperaments ("The Explorer — ..." vs "The Steward — ...").
+- would-rather-be: "Which would you rather be?" — two values ("Understood" vs "Admired").
+- future-self: "Who do you want to become?" — two directions of growth ("More peaceful" vs "More powerful").
+
+Both options must be genuinely appealing — this reveals self-concept, not right answers.
+- "context": the framing question ("Which is more you?" / "Which would you rather be?" / "Who do you want to become?").
+- "option_a"/"option_b": the two short, vivid choices.
+- "axis": 2-4 words ("explorer vs steward").
+- "strength": 0..1.
+
+Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","strength":0.8}}]}}
+"""
+
+INNER_LIFE_V1 = """\
+You generate INNER-LIFE preference pairs — affective and interpersonal fingerprint.
+
+MODE / HINT: {context} {axis_hint}
+
+Produce {n} distinct pairs in one of three flavors (match the MODE if given, else vary):
+- emotional reaction: "Which moves you more?" / "Which lands deeper?" — two evocative stimuli.
+- aversion: "Which would be harder to live with?" — two things the person might avoid (the choice marks the stronger aversion).
+- boundary: "When X, you tend to…" — two ways of handling closeness, conflict, or obligation.
+
+Both options sincerely defensible; this reveals temperament, not correctness.
+- "context": the framing question.
+- "option_a"/"option_b": the two short, vivid choices.
+- "axis": 2-5 words.
+- "strength": 0..1.
+
+Return ONLY JSON: {{"pairs": [{{"context":"...","option_a":"...","option_b":"...","axis":"...","strength":0.8}}]}}
+"""
+
 WRITERS = {
     "stance_contrast_v1": WRITER_TEMPLATE_V1,
     "opinion_stance_v1": OPINION_STANCE_V1,
@@ -143,6 +182,8 @@ WRITERS = {
     "narrative_pick_v1": NARRATIVE_PICK_V1,
     "role_play_v1": ROLE_PLAY_V1,
     "moral_tradeoff_v1": MORAL_TRADEOFF_V1,
+    "identity_choice_v1": IDENTITY_CHOICE_V1,
+    "inner_life_v1": INNER_LIFE_V1,
 }
 
 

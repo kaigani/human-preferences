@@ -44,6 +44,7 @@ const judgedQuery = (onlyAB: boolean) => `
   LEFT JOIN themes t ON t.id = p.theme_id
   LEFT JOIN seeds s ON s.id = p.seed_id
   WHERE ${onlyAB ? `j.choice IN ('a','b')` : `1=1`}
+    AND (t.kind IS NULL OR t.kind != 'memory')  -- memory-salience references private biography; never exported
   ORDER BY j.created_at
 `;
 

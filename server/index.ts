@@ -16,6 +16,7 @@ import {
 } from './repo.js';
 import { getRobustness } from './robustness.js';
 import { createLifeEvent, deleteLifeEvent, lifeCounts, listLifeEvents } from './life.js';
+import { refreshMemoryPairs } from './memory.js';
 import type { LifeEventInput } from '../shared/life.js';
 import { buildDpoJsonl, buildRecords, buildRubric } from '../export/build.js';
 import type { Choice, JudgmentInput } from '@shared/types.js';
@@ -135,8 +136,13 @@ app.post('/api/life', async (req, reply) => {
   if (!body?.category || !body?.title?.trim()) {
     return reply.code(400).send({ error: 'category and title are required' });
   }
-  return createLifeEvent(body as LifeEventInput);
+  const event = createLifeEvent(body as LifeEventInput);
+  refreshMemoryPairs(); // keep the "what shaped you" salience pairs in sync
+  return event;
 });
+
+// Regenerate memory-salience pairs from current life events.
+app.post('/api/memory/refresh', async () => refreshMemoryPairs());
 
 app.delete<{ Params: { id: string } }>('/api/life/:id', async (req) => ({
   deleted: deleteLifeEvent(req.params.id),

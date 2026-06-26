@@ -18,6 +18,12 @@ const themes: Array<[string, string, string, string, number]> = [
   ['games', 'Games', 'narrative', 'Which world would you rather enter?', 14],
   ['work-roles', 'Work & roles', 'roleplay', 'You are in a role, facing a call. What do you do?', 6],
   ['morality', 'Right & wrong', 'moral', 'Two values collide. Which wins for you?', 7],
+  ['self-archetype', 'Archetypes', 'identity', 'Which is more you?', 8],
+  ['self-rather', 'Would rather be', 'identity', 'Which would you rather be?', 9],
+  ['self-future', 'Future self', 'identity', 'Who do you want to become?', 10],
+  ['inner-emotion', 'What moves you', 'inner', 'Which moves you more?', 11],
+  ['inner-aversion', 'Aversions', 'inner', 'What you would rather avoid.', 12],
+  ['inner-boundary', 'Boundaries', 'inner', 'How you hold closeness and conflict.', 13],
 ];
 const upsertTheme = db.prepare(
   `INSERT OR IGNORE INTO themes (id,label,kind,description,sort_order) VALUES (?,?,?,?,?)`,
@@ -36,4 +42,6 @@ function ingest(file: string): number {
 const nr = ingest('narrative.jsonl');
 const rp = ingest('roleplay.jsonl');
 const mr = ingest('morality.jsonl');
-console.log(`✓ Seeded curated content: ${nr} narrative + ${rp} role-play + ${mr} morality pair(s).`);
+const sf = ingest('self.jsonl');
+const inr = ingest('inner.jsonl');
+console.log(`✓ Seeded curated content: ${nr} narrative + ${rp} role-play + ${mr} morality + ${sf} self + ${inr} inner pair(s).`);
