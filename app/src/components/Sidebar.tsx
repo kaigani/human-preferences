@@ -4,6 +4,7 @@ const LINKS = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/judge', label: 'Questions', end: false },
   { to: '/themes', label: 'Themes', end: false },
+  { to: '/story', label: 'Story', end: false },
   { to: '/profile', label: 'Profile', end: false },
 ];
 

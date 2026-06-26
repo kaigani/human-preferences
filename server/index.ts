@@ -15,6 +15,8 @@ import {
   setMeta,
 } from './repo.js';
 import { getRobustness } from './robustness.js';
+import { createLifeEvent, deleteLifeEvent, lifeCounts, listLifeEvents } from './life.js';
+import type { LifeEventInput } from '../shared/life.js';
 import { buildDpoJsonl, buildRecords, buildRubric } from '../export/build.js';
 import type { Choice, JudgmentInput } from '@shared/types.js';
 
@@ -123,6 +125,37 @@ app.get('/api/profile/robustness', async () => getRobustness());
 app.get<{ Querystring: { size?: string } }>('/api/sets/next', async (req) => {
   const size = Math.min(40, Math.max(5, Number(req.query.size ?? 20) || 20));
   return { pairs: getSet(size) };
+});
+
+// ── life events (biography layer — private, never in preference exports) ──
+app.get('/api/life', async () => ({ events: listLifeEvents(), counts: lifeCounts() }));
+
+app.post('/api/life', async (req, reply) => {
+  const body = req.body as Partial<LifeEventInput>;
+  if (!body?.category || !body?.title?.trim()) {
+    return reply.code(400).send({ error: 'category and title are required' });
+  }
+  return createLifeEvent(body as LifeEventInput);
+});
+
+app.delete<{ Params: { id: string } }>('/api/life/:id', async (req) => ({
+  deleted: deleteLifeEvent(req.params.id),
+}));
+
+// Private biography export — for the mindfile. Explicitly separate from the
+// anonymous preference exports; marked private so it's never confused with them.
+app.get('/api/life/export', async (_req, reply) => {
+  const events = listLifeEvents();
+  const payload = {
+    kind: 'mindfile-biography',
+    privacy: 'PRIVATE — personal biography, not part of the shareable preference dataset',
+    schema_version: 1,
+    events,
+  };
+  return reply
+    .header('content-type', 'application/json')
+    .header('content-disposition', 'attachment; filename="biography.private.json"')
+    .send(JSON.stringify(payload, null, 2));
 });
 
 // ── stats ──

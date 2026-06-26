@@ -6,6 +6,7 @@ import type {
   StatsSummary,
   Theme,
 } from '@shared/types';
+import type { LifeEvent, LifeEventInput } from '@shared/life';
 
 export interface QueueSelector {
   theme?: string;
@@ -48,4 +49,9 @@ export const api = {
     http<Session>('/api/sessions', { method: 'POST', body: JSON.stringify({ device_label: navigator.platform }) }),
   judge: (input: JudgmentInput) =>
     http<{ id: string }>('/api/judgments', { method: 'POST', body: JSON.stringify(input) }),
+  life: () => http<{ events: LifeEvent[]; counts: Record<string, number> }>('/api/life'),
+  addLife: (input: LifeEventInput) =>
+    http<LifeEvent>('/api/life', { method: 'POST', body: JSON.stringify(input) }),
+  deleteLife: (id: string) =>
+    http<{ deleted: boolean }>(`/api/life/${id}`, { method: 'DELETE' }),
 };

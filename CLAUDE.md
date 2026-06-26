@@ -86,6 +86,13 @@ npm run cli -- audit-dupes [--theme <id>] [--threshold 0.9] [--apply]
 ```
 `audit-dupes` greedy-clusters per theme (earliest pair is the representative); `--apply` flags only `queued` near-dups, never `judged` ones.
 
+## Biography layer (the mindfile's identity track)
+Separate from the A/B preference engine on purpose — `life_events` table (`schema/migrations/0004`), `shared/life.ts` (12 categories), `server/life.ts`, `/api/life*` routes, the **Story** page (`/story`).
+- **Dated facts, roles, turning points** — not preferences. Category → subcategory → title → detail + dates, people, place, significance (1–5), privacy (private/sensitive/public), status.
+- **Private by design:** never in the records/DPO/rubric exports (verified — those read pairs/judgments only). Has its own `/api/life/export` → `biography.private.json`, clearly marked private. Lives only in the gitignored DB.
+- **Drift-ready:** events are dated and judgments are timestamped, so events can later anchor preference drift on a timeline (the "tastes before/after a life event" question). Correlation is future work; date capture is in place now. See [[preference-drift]].
+- **Aesthetic:** typographic timeline (dated ledger, significance dots, electric-yellow only on "current"). No charts.
+
 ## Conventions
 - Keep the judge queue clean: only ingest real, high-quality pairs (delete test/mock).
 - Personal data is gitignored (`data/`, `*.db`, `exports/`, `.env`). Code is public.

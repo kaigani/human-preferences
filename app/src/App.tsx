@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Judge } from './pages/Judge';
 import { Themes } from './pages/Themes';
 import { Profile } from './pages/Profile';
+import { Story } from './pages/Story';
 import { api } from './api';
 
 export function App() {
@@ -24,7 +25,8 @@ export function App() {
             <Route path="/" element={<Dashboard name={name} />} />
             <Route path="/judge" element={<Judge />} />
             <Route path="/themes" element={<Themes />} />
-            <Route path="/profile" element={<Profile name={name} onNameSaved={setName} />} />
+            <Route path="/story" element={<Story />} />
+          <Route path="/profile" element={<Profile name={name} onNameSaved={setName} />} />
           </Routes>
         </main>
         <Rail />
